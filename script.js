@@ -1,5 +1,5 @@
 // ----- Constantes Globais do Jogo -----
-const MAX_PV = 20;
+const MAX_PV = 40; // Alterado de 20 para 40
 const DECK_SIZE = 20; // Tamanho do baralho a ser montado
 
 // ----- Definição de Cartas -----
@@ -15,29 +15,38 @@ const CARD_POOL = {
   
     // Raras
     mago: { id:'mago', name:'Mago Aprendiz', type:'rare', cost:2, desc:'Causa 4 de dano.', art:'🧙', image: 'magoaprendiz.png', play: ({ctx})=>dealDamage(ctx,4) },
-    barreira: { id:'barreira', name:'Barreira de Pedra', type:'rare', cost:2, desc:'Ganha 5 de escudo.', art:'🧱', play: ({ctx})=>gainShield(ctx.player,5) },
-    lamina: { id:'lamina', name:'Lâmina Flamejante', type:'rare', cost:2, desc:'3 de dano, ignora toda a defesa.', art:'🔥', play: ({ctx})=>dealDamage(ctx,3, {ignoreDef:999}) },
-    pocaoM: { id:'pocaoM', name:'Poção Maior', type:'rare', cost:2, desc:'Cura 5 PV.', art:'💖', play: ({ctx})=>heal(ctx.player,5) },
-    cacador: { id:'cacador', name:'Caçador Sombrio', type:'rare', cost:2, desc:'2 de dano. Se derrotar um alvo, ganha +2 energia.', art:'🦇', play: async ({ctx})=>{
-        const defeated = await dealDamage(ctx,2);
-        if(defeated){
-            log('Caçador Sombrio ativou seu efeito!');
-            state[ctx.player].energy = Math.min(5, state[ctx.player].energy + 2);
-            updateUI();
-        }
+    barreira: { id:'barreira', name:'Barreira de Pedra', type:'rare', cost:2, desc:'Ganha 5 de escudo.', art:'🧱', image: 'barreiradepedra.png', play: ({ctx})=>gainShield(ctx.player,5) },
+    lamina: { id:'lamina', name:'Lâmina Flamejante', type:'rare', cost:2, desc:'3 de dano, ignora toda a defesa.', art:'🔥', image: 'laminaflamejante.png', play: ({ctx})=>dealDamage(ctx,3, {ignoreDef:999}) },
+    pocaoM: { id:'pocaoM', name:'Poção Maior', type:'rare', cost:2, desc:'Cura 5 PV.', art:'💖', image: 'curamaior.png', play: ({ctx})=>heal(ctx.player,5) },
+    cacador: { id:'cacador', name:'Caçador Sombrio', type:'rare', cost:2, desc:'Causa 2 de dano e te dá 1 de energia.',  art:'🦇', image: 'cacadorsombrio.png', play: async ({ctx})=>{
+        await dealDamage(ctx,2);
+        log('Caçador Sombrio ativou seu efeito!');
+        state[ctx.player].energy = Math.min(7, state[ctx.player].energy + 1);
+        updateUI();
     }},
   
     // Lendárias
-    dragao: { id:'dragao', name:'Dragão Ancestral', type:'legend', cost:5, desc:'Causa 10 de dano.', art:'🐲', play: ({ctx})=>dealDamage(ctx,10) },
-    cavaleiro: { id:'cavaleiro', name:'Cavaleiro Imortal', type:'legend', cost:4, desc:'Causa 6 de dano. (Retorno não impl.)', art:'👻', play: ({ctx})=>dealDamage(ctx,6) },
-    tempestade: { id:'tempestade', name:'Tempestade Arcana', type:'legend', cost:4, desc:'Causa 3 de dano ao oponente.', art:'🌪️', play: ({ctx})=>dealDamage(ctx,3) },
-    espadaDivina: { id:'espadaDivina', name:'Espada Divina', type:'legend', cost:3, desc:'Dobra o dano da próxima carta de ataque.', art:'✨', play: ({ctx})=>applyEffect(ctx.player, {key:'doubleNextAttack',turns:2}) },
-  
+    dragao: { id:'dragao', name:'Dragão Ancestral', type:'legend', cost:5, desc:'Causa 10 de dano.', image: 'dragaoancestral.png', art:'🐲', play: ({ctx})=>dealDamage(ctx,10) },
+    cavaleiro: { id:'cavaleiro', name:'Cavaleiro Imortal', type:'legend', cost:6, desc:'Causa 6 de dano e cura 3 de vida.', art:'👻', image: 'cavaleiroimortal.png', play: async ({ctx})=>{
+        await dealDamage(ctx,6);
+        heal(ctx.player,3);
+    }},
+    tempestade: { id:'tempestade', name:'Tempestade Arcana', type:'legend', cost:4, desc:'Causa 3 de dano e aplica 2 turnos de Sangramento (1 de dano por turno).', art:'🌪️', image: 'tempestadearcana.png', play: async ({ctx})=>{
+        await dealDamage(ctx,3);
+        applyEffect(ctx.opponent, {key:'bleed', turns:3, damage:1}); // 3 turnos para aplicar 2 vezes
+    }},
+    espadaDivina: { id:'espadaDivina', name:'Espada Divina', type:'legend', cost:3, desc:'Dobra o dano da próxima carta de ataque nos próximos 2 turnos.', art:'✨', image: 'espadadivina.png', play: ({ctx})=>applyEffect(ctx.player, {key:'doubleNextAttack',turns:2}) },
+    feiticeira: { id: 'feiticeira', name: 'Feiticeira da Lua', type: 'legend', cost: 3, desc: 'Recupera 3 de PV e ganha 2 de energia.', art: '🌙', image: 'feiticeiradalua.png', play: ({ctx}) => {
+        heal(ctx.player, 3);
+        state[ctx.player].energy = Math.min(7, state[ctx.player].energy + 2);
+        log(`${state[ctx.player].name} sente a energia da lua!`);
+    }},
+
     // Jokers
-    jokerRed: { id:'jokerRed', name:'Joker Vermelho', type:'joker', cost:2, desc:'Multiplica por 2 todo o dano neste turno.', art:'🔴', play: ({ctx})=>applyEffect(ctx.player, {key:'doubleAllDamage',turns:1}) },
-    jokerBlue: { id:'jokerBlue', name:'Joker Azul', type:'joker', cost:1, desc:'Defesas também curam 2 PV neste turno.', art:'🔵', play: ({ctx})=>applyEffect(ctx.player, {key:'defHeal',turns:1}) },
-    jokerGreen: { id:'jokerGreen', name:'Joker Verde', type:'joker', cost:3, desc:'Permite comprar 2 cartas.', art:'🟢', play: ({ctx})=>{ drawCard(ctx.player); drawCard(ctx.player); } },
-    jokerGold: { id:'jokerGold', name:'Joker Dourado', type:'joker', cost:4, desc:'Revive 1 carta do descarte para a mão.', art:'🟡', play: ({ctx})=>reviveFromDiscard(ctx) }
+    jokerRed: { id:'jokerRed', name:'Joker Vermelho', type:'joker', cost:2, desc:'Multiplica por 2 todo o dano neste turno.', art:'🔴', image: 'jokervermelho.png', play: ({ctx})=>applyEffect(ctx.player, {key:'doubleAllDamage',turns:1}) },
+    jokerBlue: { id:'jokerBlue', name:'Joker Azul', type:'joker', cost:1, desc:'Defesas também curam 2 PV neste turno.', art:'🔵', image: 'jokerazul.png', play: ({ctx})=>applyEffect(ctx.player, {key:'defHeal',turns:1}) },
+    jokerGreen: { id:'jokerGreen', name:'Joker Verde', type:'joker', cost:3, desc:'Permite comprar 2 cartas.', art:'🟢', image: 'jokerverde.png', play: ({ctx})=>{ drawCard(ctx.player); drawCard(ctx.player); } },
+    jokerGold: { id:'jokerGold', name:'Joker Dourado', type:'joker', cost:1, desc:'Revive 1 carta do descarte para a mão.', art:'🟡', image: 'jokerdourado.png', play: ({ctx})=>reviveFromDiscard(ctx) }
   };
   
   const RARE_CARD_TYPES = ['legend', 'joker'];
@@ -145,13 +154,21 @@ const CARD_POOL = {
     }
 
     p.shield = 0;
-    p.energy = Math.min(5, p.energy + 2);
+    p.energy = Math.min(7, p.energy + 3); // Alterado para 7 de max e +3 por turno
     
-    log(`${p.name} começou o turno e ganhou +2 de Energia.`);
-    drawCard(who);
+    log(`${p.name} começou o turno e ganhou +3 de Energia.`);
     
     state.activeEffects = state.activeEffects.filter(eff => {
         if (eff.owner === who) {
+            // Aplica efeitos de dano por turno (como sangramento)
+            if (eff.key === 'bleed' && eff.turns > 1) { // Só aplica se não for o turno que expiraria
+                log(`${p.name} sofre ${eff.damage} de dano de Sangramento.`);
+                p.pv -= eff.damage || 1;
+                const avatarId = (gameMode === 'vs-player' && who === state.active) ? 'bottom-player-avatar' : (who === 'p1' ? 'bottom-player-avatar' : 'top-player-avatar');
+                showDamageIndicator(eff.damage || 1, document.getElementById(avatarId));
+                if (checkWin()) return false;
+            }
+
             eff.turns--;
             if (eff.turns <= 0) {
                 log(`Efeito '${eff.key}' expirou para ${p.name}.`);
@@ -160,7 +177,8 @@ const CARD_POOL = {
         }
         return true;
     });
-    
+
+    drawCard(who);
     updateUI();
 
     if (gameMode === 'vs-bot' && who === 'p2') setTimeout(enemyAI, 1000);
@@ -344,8 +362,6 @@ const CARD_POOL = {
 
     if (card.image) {
       el.classList.add('full-image');
-      // ===== CORREÇÃO APLICADA AQUI =====
-      // Procura a imagem na mesma pasta do index.html
       el.style.backgroundImage = `url('${card.image}')`;
     } else {
       el.innerHTML = `
@@ -392,12 +408,19 @@ const CARD_POOL = {
     document.getElementById('top-player-discard').textContent = topP.discard.length;
     document.getElementById('top-player-energy').textContent = topP.energy;
     
+    // Controle do ícone de Sangramento
+    const topBleedIcon = document.getElementById('top-player-bleed-icon');
+    const bottomBleedIcon = document.getElementById('bottom-player-bleed-icon');
+    
+    hasEffect(topPlayerKey, 'bleed') ? topBleedIcon.classList.remove('hidden') : topBleedIcon.classList.add('hidden');
+    hasEffect(bottomPlayerKey, 'bleed') ? bottomBleedIcon.classList.remove('hidden') : bottomBleedIcon.classList.add('hidden');
+
     document.getElementById('turn-indicator').textContent = `Turno ${state.turn}`;
     document.getElementById('undo-move').disabled = state.undoStack.length === 0;
 
     const energyBar = document.getElementById('bottom-player-energy');
     energyBar.innerHTML = '';
-    for(let i=0; i<5; i++){
+    for(let i=0; i<7; i++){ // Alterado de 5 para 7
       const orb = document.createElement('div');
       orb.className = `energy-orb ${i < bottomP.energy ? 'filled' : ''}`;
       energyBar.appendChild(orb);

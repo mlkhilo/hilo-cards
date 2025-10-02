@@ -41,7 +41,10 @@
       <div class="enemy-area">
         <div class="player-stats">
           <div class="player-name" id="top-player-name">Inimigo</div>
-          <div class="pv" id="top-player-pv">20</div>
+          <div class="pv-line">
+            <div class="pv" id="top-player-pv">40</div>
+            <img id="top-player-bleed-icon" src="sangue.png" class="status-icon hidden" alt="Ícone de Sangramento" title="Sofrendo de Sangramento">
+          </div>
           <div class="health-bar-container">
             <div id="top-player-health-bar" class="health-bar"></div>
           </div>
@@ -66,14 +69,20 @@
         <div id="bottom-player-avatar" class="avatar">😎</div>
         <div class="player-stats">
           <div class="player-name" id="bottom-player-name">Jogador</div>
-          <div class="pv" id="bottom-player-pv">20</div>
+           <div class="pv-line">
+            <div class="pv" id="bottom-player-pv">40</div>
+             <img id="bottom-player-bleed-icon" src="sangue.png" class="status-icon hidden" alt="Ícone de Sangramento" title="Sofrendo de Sangramento">
+          </div>
            <div class="health-bar-container">
             <div id="bottom-player-health-bar" class="health-bar"></div>
           </div>
           <div class="resources">
             <div class="resource-item">Baralho: <span id="bottom-player-deck">20</span></div>
             <div class="resource-item">Descarte: <span id="bottom-player-discard">0</span></div>
-            <div class="energy-bar" id="bottom-player-energy"></div>
+            <div class="energy-container">
+                <img src="energia.png" class="energy-title-icon" alt="Ícone de Energia">
+                <div class="energy-bar" id="bottom-player-energy"></div>
+            </div>
           </div>
         </div>
       </div>
