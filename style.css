@@ -214,6 +214,20 @@ body {
 .player-stats { flex: 1; }
 .enemy-area .player-stats { text-align: right; }
 .player-name { font-size: 16px; font-weight: 600; color: var(--text-muted); }
+
+.pv-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.enemy-area .pv-line {
+    justify-content: flex-end;
+}
+.status-icon {
+    width: 24px;
+    height: 24px;
+}
+
 .pv { font-size: 28px; font-weight: 700; }
 
 .health-bar-container {
@@ -234,16 +248,26 @@ body {
 #bottom-player-health-bar { background: linear-gradient(90deg, var(--accent-green), #86efac); }
 #top-player-health-bar { background: linear-gradient(90deg, var(--accent-red), #fca5a5); }
 
-.resources { display: flex; gap: 12px; margin-top: 8px; }
+.resources { display: flex; gap: 12px; margin-top: 8px; align-items: flex-end; }
 .enemy-area .resources { justify-content: flex-end; }
 .resource-item {
   background: var(--bg-dark);
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 13px;
+  height: fit-content;
 }
 .resource-item span { font-weight: 600; color: var(--accent-gold); }
 
+.energy-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.energy-title-icon {
+    height: 18px; /* Altura do ícone energia.png */
+}
 .energy-bar { display: flex; gap: 6px; }
 .energy-orb {
   width: 24px; height: 24px;
