@@ -430,6 +430,9 @@ const CARD_POOL = {
       hand.appendChild(el);
     });
     
+    // Atualiza o contador de cartas na mão
+    document.getElementById('hand-counter').textContent = `${bottomP.hand.length}/${MAX_HAND_SIZE}`;
+    
     const playedCardsArea = document.getElementById('played-cards');
     playedCardsArea.innerHTML = '';
     state.playedCards.forEach(card => playedCardsArea.appendChild(renderCard(card, { isSmall: true })));
