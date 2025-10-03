@@ -121,11 +121,16 @@ body {
   height: 180px;
   transform: scale(0.9);
   transition: all 0.2s ease;
+  position: relative; /* Adicionado para posicionar o botão de info */
 }
 .deck-builder-card:hover {
   transform: scale(0.95);
   box-shadow: 0 0 20px var(--accent-blue);
 }
+.deck-builder-card .card-info-btn {
+    transform: scale(0.9); /* Ajusta o tamanho do botão para a carta menor */
+}
+
 
 #current-deck-list .card-in-deck {
   display: flex;
@@ -421,6 +426,29 @@ body {
   background-position: center;
 }
 
+.card-info-btn {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 28px;
+    height: 28px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    cursor: help;
+    z-index: 12;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+.card-info-btn:hover {
+    background: var(--accent-blue);
+    transform: scale(1.1);
+}
+
 .card[data-type="basic"] {
   border-color: #3b82f6;
   box-shadow: var(--glow-blue), 0 8px 25px rgba(0,0,0,0.5);
@@ -518,4 +546,58 @@ body {
 .transition-content button:hover {
     transform: scale(1.05);
     background: #4ade80;
+}
+
+/* Estilos do Modal de Imagem da Carta */
+#card-image-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.modal-content {
+    position: relative;
+    display: flex;
+}
+#modal-card-image {
+    max-height: 85vh;
+    max-width: 85vw;
+    width: auto;
+    height: auto;
+    border-radius: 15px;
+    border: 3px solid var(--accent-gold);
+    box-shadow: 0 0 40px rgba(245, 158, 11, 0.6);
+}
+
+#modal-close-btn {
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 44px;
+    height: 44px;
+    background: var(--accent-red);
+    color: var(--text-light);
+    border: 2px solid var(--text-light);
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 26px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    z-index: 301;
+    transition: all 0.2s ease;
+}
+#modal-close-btn:hover {
+    background: #ff6666;
+    transform: scale(1.1) rotate(90deg);
 }

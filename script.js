@@ -1,7 +1,7 @@
 // ----- Constantes Globais do Jogo -----
-const MAX_PV = 40; // Alterado de 20 para 40
-const DECK_SIZE = 20; // Tamanho do baralho a ser montado
-const MAX_HAND_SIZE = 8; // Limite de cartas na mão
+const MAX_PV = 40;
+const DECK_SIZE = 20;
+const MAX_HAND_SIZE = 8;
 
 // ----- Definição de Cartas -----
 const CARD_POOL = {
@@ -34,7 +34,7 @@ const CARD_POOL = {
     }},
     tempestade: { id:'tempestade', name:'Tempestade Arcana', type:'legend', cost:4, desc:'Causa 3 de dano e aplica 2 turnos de Sangramento (1 de dano por turno).', art:'🌪️', image: 'tempestadearcana.png', play: async ({ctx})=>{
         await dealDamage(ctx,3);
-        applyEffect(ctx.opponent, {key:'bleed', turns:3, damage:1}); // 3 turnos para aplicar 2 vezes
+        applyEffect(ctx.opponent, {key:'bleed', turns:3, damage:1});
     }},
     espadaDivina: { id:'espadaDivina', name:'Espada Divina', type:'legend', cost:3, desc:'Dobra o dano da próxima carta de ataque nos próximos 2 turnos.', art:'✨', image: 'espadadivina.png', play: ({ctx})=>applyEffect(ctx.player, {key:'doubleNextAttack',turns:2}) },
     feiticeira: { id: 'feiticeira', name: 'Feiticeira da Lua', type: 'legend', cost: 3, desc: 'Recupera 3 de PV e ganha 2 de energia.', art: '🌙', image: 'feiticeiradalua.png', play: ({ctx}) => {
@@ -50,11 +50,9 @@ const CARD_POOL = {
     jokerGold: { id:'jokerGold', name:'Joker Dourado', type:'joker', cost:1, desc:'Revive 1 carta do descarte para a mão.', art:'🟡', image: 'jokerdourado.png', play: ({ctx})=>reviveFromDiscard(ctx) }
   };
   
-  const RARE_CARD_TYPES = ['legend', 'joker'];
-  
   // ----- Estado do Jogo -----
   let state = null;
-  let gameMode = 'vs-bot'; // 'vs-bot' ou 'vs-player'
+  let gameMode = 'vs-bot';
   let player1CustomDeck = [];
   let player2CustomDeck = [];
   let currentDeckBuilderFor = 'p1';
@@ -99,7 +97,6 @@ const CARD_POOL = {
   
   function drawCard(who) {
       const p = state[who];
-
       if (p.hand.length >= MAX_HAND_SIZE) {
           log(`${p.name} tem a mão cheia! A carta comprada foi para o descarte.`);
           if (p.deck.length > 0) {
@@ -109,7 +106,6 @@ const CARD_POOL = {
           updateUI();
           return null;
       }
-
       if (p.deck.length === 0) {
           if(p.discard.length > 0) {
               log(`${p.name} ficou sem cartas! Reembaralhando o descarte.`);
@@ -140,7 +136,6 @@ const CARD_POOL = {
   function startTurn(who) {
       if (state.gameEnded) return;
       state.active = who;
-
       if(gameMode === 'vs-player'){
         const transitionScreen = document.getElementById('turn-transition-screen');
         document.getElementById('transition-title').textContent = `Vez do ${state[who].name}`;
@@ -157,30 +152,24 @@ const CARD_POOL = {
   function executeTurnStart(who) {
     const p = state[who];
     const isHumanTurn = (gameMode === 'vs-bot' && who === 'p1') || gameMode === 'vs-player';
-
     if (isHumanTurn) {
         state.playedCards = [];
         state.undoStack = [];
         document.getElementById('end-turn').disabled = false;
         document.getElementById('undo-move').disabled = true;
     }
-
     p.shield = 0;
-    p.energy = Math.min(7, p.energy + 3); // Alterado para 7 de max e +3 por turno
-    
+    p.energy = Math.min(7, p.energy + 3);
     log(`${p.name} começou o turno e ganhou +3 de Energia.`);
-    
     state.activeEffects = state.activeEffects.filter(eff => {
         if (eff.owner === who) {
-            // Aplica efeitos de dano por turno (como sangramento)
-            if (eff.key === 'bleed' && eff.turns > 1) { // Só aplica se não for o turno que expiraria
+            if (eff.key === 'bleed' && eff.turns > 1) {
                 log(`${p.name} sofre ${eff.damage} de dano de Sangramento.`);
                 p.pv -= eff.damage || 1;
                 const avatarId = (gameMode === 'vs-player' && who === state.active) ? 'bottom-player-avatar' : (who === 'p1' ? 'bottom-player-avatar' : 'top-player-avatar');
                 showDamageIndicator(eff.damage || 1, document.getElementById(avatarId));
                 if (checkWin()) return false;
             }
-
             eff.turns--;
             if (eff.turns <= 0) {
                 log(`Efeito '${eff.key}' expirou para ${p.name}.`);
@@ -189,23 +178,19 @@ const CARD_POOL = {
         }
         return true;
     });
-
     drawCard(who);
     updateUI();
-
     if (gameMode === 'vs-bot' && who === 'p2') setTimeout(enemyAI, 1000);
   }
   
   function endTurn() {
       const activePlayer = state.active;
       const opponent = getOpponent(activePlayer);
-
       if (state.active === 'p1' || (state.active === 'p2' && gameMode === 'vs-player')) {
           document.getElementById('end-turn').disabled = true;
       }
       log(`${state[activePlayer].name} terminou seu turno.`);
       state[activePlayer].discard.push(...state.playedCards);
-      
       if(activePlayer === 'p2') {
         state.turn++;
       }
@@ -215,25 +200,21 @@ const CARD_POOL = {
 
   function undoMove() {
       if (state.gameEnded || state.undoStack.length === 0) return;
-
       const lastMove = state.undoStack.pop();
       const p = state[state.active];
       const opponent = state[getOpponent(state.active)];
-      
       p.energy = lastMove.prevEnergy;
       p.pv = lastMove.prevPV;
       p.shield = lastMove.prevShield;
       p.deck = lastMove.prevDeck;
       p.discard = lastMove.prevDiscard;
-      p.hand = lastMove.prevHand; // CORREÇÃO AQUI
+      p.hand = lastMove.prevHand;
       opponent.pv = lastMove.prevOpponentPV;
       opponent.shield = lastMove.prevOpponentShield;
-      
       const cardToReturn = state.playedCards.pop();
       if (cardToReturn) {
           log(`Retornada a jogada de ${cardToReturn.name}.`);
       }
-      
       document.getElementById('undo-move').disabled = state.undoStack.length === 0; 
       updateUI();
   }
@@ -243,26 +224,22 @@ const CARD_POOL = {
       const p = state[state.active];
       const card = p.hand[handIdx];
       if (!card || card.cost > p.energy) return;
-  
       state.undoStack.push({
           prevEnergy: p.energy,
           prevPV: p.pv,
           prevShield: p.shield,
           prevDeck: p.deck.slice(),
           prevDiscard: p.discard.slice(),
-          prevHand: p.hand.slice(), // CORREÇÃO AQUI
+          prevHand: p.hand.slice(),
           prevOpponentPV: state[getOpponent(state.active)].pv,
           prevOpponentShield: state[getOpponent(state.active)].shield,
           cardId: card.id
       });
-
       p.energy -= card.cost;
       const playedCard = p.hand.splice(handIdx, 1)[0];
       log(`${p.name} jogou ${card.name}.`);
-      
       const context = { ctx: { player: state.active, opponent: getOpponent(state.active) } };
       await card.play(context);
-      
       state.playedCards.push(playedCard);
       document.getElementById('undo-move').disabled = false;
       updateUI();
@@ -272,7 +249,6 @@ const CARD_POOL = {
       if (state.gameEnded) return;
       const enemy = state.p2;
       const playableCards = enemy.hand.map((c, i) => ({card: c, index: i})).filter(item => item.card.cost <= enemy.energy);
-  
       if (playableCards.length > 0) {
           const { card, index } = playableCards[0];
           enemy.energy -= card.cost;
@@ -300,7 +276,6 @@ const CARD_POOL = {
     defender.shield = Math.max(0, defender.shield - dmg);
     defender.pv -= finalDamage;
     log(`${state[ctx.player].name} causou ${dmg} de dano a ${defender.name}. ${shieldBlock} bloqueado.`);
-    
     const targetPlayerKey = ctx.opponent;
     let targetAvatarId = '';
     if (gameMode === 'vs-bot') {
@@ -309,7 +284,6 @@ const CARD_POOL = {
         targetAvatarId = state.active === targetPlayerKey ? 'bottom-player-avatar' : 'top-player-avatar';
     }
     showDamageIndicator(finalDamage, document.getElementById(targetAvatarId));
-
     updateUI();
     await new Promise(resolve => setTimeout(resolve, 500));
     checkWin();
@@ -375,7 +349,7 @@ const CARD_POOL = {
   }
   
   // ----- Renderização e UI -----
-  function renderCard(card, isSmall = false) {
+  function renderCard(card, { isSmall = false } = {}) {
     const el = document.createElement('div');
     el.className = 'card';
     if(isSmall) el.classList.add('small-card');
@@ -403,23 +377,17 @@ const CARD_POOL = {
 
     const bottomPlayerKey = (gameMode === 'vs-player') ? state.active : 'p1';
     const topPlayerKey = getOpponent(bottomPlayerKey);
-    
     const bottomP = state[bottomPlayerKey];
     const topP = state[topPlayerKey];
 
-    // Nomes e Avatares
     document.getElementById('bottom-player-name').textContent = bottomP.name;
     document.getElementById('top-player-name').textContent = topP.name;
     document.getElementById('bottom-player-avatar').textContent = bottomPlayerKey === 'p1' ? '😎' : '🤓';
     document.getElementById('top-player-avatar').textContent = topPlayerKey === 'p1' ? '😎' : (gameMode === 'vs-bot' ? '🤖' : '🤓');
-
-    // Barras de Vida
-    const bottomHealthPercent = (Math.max(0, bottomP.pv) / MAX_PV) * 100;
-    document.getElementById('bottom-player-health-bar').style.width = `${bottomHealthPercent}%`;
-    const topHealthPercent = (Math.max(0, topP.pv) / MAX_PV) * 100;
-    document.getElementById('top-player-health-bar').style.width = `${topHealthPercent}%`;
-
-    // Stats
+    
+    document.getElementById('bottom-player-health-bar').style.width = `${(Math.max(0, bottomP.pv) / MAX_PV) * 100}%`;
+    document.getElementById('top-player-health-bar').style.width = `${(Math.max(0, topP.pv) / MAX_PV) * 100}%`;
+    
     document.getElementById('bottom-player-pv').textContent = `${bottomP.pv} PV ${bottomP.shield > 0 ? `(+${bottomP.shield}🛡️)`: ''}`;
     document.getElementById('bottom-player-deck').textContent = bottomP.deck.length;
     document.getElementById('bottom-player-discard').textContent = bottomP.discard.length;
@@ -429,19 +397,15 @@ const CARD_POOL = {
     document.getElementById('top-player-discard').textContent = topP.discard.length;
     document.getElementById('top-player-energy').textContent = topP.energy;
     
-    // Controle do ícone de Sangramento
-    const topBleedIcon = document.getElementById('top-player-bleed-icon');
-    const bottomBleedIcon = document.getElementById('bottom-player-bleed-icon');
-    
-    hasEffect(topPlayerKey, 'bleed') ? topBleedIcon.classList.remove('hidden') : topBleedIcon.classList.add('hidden');
-    hasEffect(bottomPlayerKey, 'bleed') ? bottomBleedIcon.classList.remove('hidden') : bottomBleedIcon.classList.add('hidden');
+    document.getElementById('top-player-bleed-icon').classList.toggle('hidden', !hasEffect(topPlayerKey, 'bleed'));
+    document.getElementById('bottom-player-bleed-icon').classList.toggle('hidden', !hasEffect(bottomPlayerKey, 'bleed'));
 
     document.getElementById('turn-indicator').textContent = `Turno ${state.turn}`;
     document.getElementById('undo-move').disabled = state.undoStack.length === 0;
 
     const energyBar = document.getElementById('bottom-player-energy');
     energyBar.innerHTML = '';
-    for(let i=0; i<7; i++){ // Alterado de 5 para 7
+    for(let i=0; i<7; i++){
       const orb = document.createElement('div');
       orb.className = `energy-orb ${i < bottomP.energy ? 'filled' : ''}`;
       energyBar.appendChild(orb);
@@ -450,15 +414,25 @@ const CARD_POOL = {
     const hand = document.getElementById('hand');
     hand.innerHTML = '';
     bottomP.hand.forEach((card, idx) => {
-      const el = renderCard(card, false);
+      const el = renderCard(card);
       if (card.cost <= bottomP.energy) el.classList.add('playable');
       el.onclick = () => playCard(idx);
+      
+      const infoBtn = document.createElement('button');
+      infoBtn.className = 'card-info-btn';
+      infoBtn.innerHTML = '🔍';
+      infoBtn.onclick = (e) => {
+          e.stopPropagation();
+          showCardImageModal(card);
+      };
+      el.appendChild(infoBtn);
+      
       hand.appendChild(el);
     });
     
     const playedCardsArea = document.getElementById('played-cards');
     playedCardsArea.innerHTML = '';
-    state.playedCards.forEach(card => playedCardsArea.appendChild(renderCard(card, true)));
+    state.playedCards.forEach(card => playedCardsArea.appendChild(renderCard(card, { isSmall: true })));
 
     document.getElementById('log-area').innerHTML = state.log.map(entry => `<div class="log-entry">${entry}</div>`).join('');
   }
@@ -473,6 +447,20 @@ const CARD_POOL = {
       indicator.style.left = `${rect.left + rect.width / 2 - indicator.offsetWidth / 2}px`;
       indicator.style.top = `${rect.top - indicator.offsetHeight}px`;
       setTimeout(() => indicator.remove(), 1500);
+  }
+
+  // ----- Funções do Modal de Imagem -----
+  function showCardImageModal(card) {
+      if (!card.image) return;
+      const modal = document.getElementById('card-image-modal');
+      const imgEl = document.getElementById('modal-card-image');
+      imgEl.src = card.image;
+      modal.classList.remove('hidden');
+  }
+
+  function hideCardImageModal() {
+      const modal = document.getElementById('card-image-modal');
+      modal.classList.add('hidden');
   }
   
   // ----- Lógica do Deck Builder -----
@@ -537,14 +525,24 @@ const CARD_POOL = {
   function initializeDeckBuilder() {
       document.getElementById('deck-builder-title').textContent = `Monte seu Baralho - ${state[currentDeckBuilderFor].name}`;
       const cardPoolEl = document.getElementById('card-pool');
-      cardPoolEl.innerHTML = ''; // Limpa para caso seja o segundo jogador
+      cardPoolEl.innerHTML = '';
       document.getElementById('deck-size-label').textContent = DECK_SIZE;
       const uniqueCards = Object.values(CARD_POOL);
   
       uniqueCards.forEach(card => {
-          const cardEl = renderCard(card, false);
+          const cardEl = renderCard(card);
           cardEl.classList.add('deck-builder-card');
           cardEl.onclick = () => addCardToDeck(card);
+          
+          const infoBtn = document.createElement('button');
+          infoBtn.className = 'card-info-btn';
+          infoBtn.innerHTML = '🔍';
+          infoBtn.onclick = (e) => {
+              e.stopPropagation();
+              showCardImageModal(card);
+          };
+          cardEl.appendChild(infoBtn);
+
           cardPoolEl.appendChild(cardEl);
       });
       
@@ -556,14 +554,13 @@ const CARD_POOL = {
     const gameModeSelectionScreen = document.getElementById('game-mode-selection');
     const deckBuilderScreen = document.getElementById('deck-builder-screen');
     const gameContainer = document.querySelector('.game-container');
+    const cardImageModal = document.getElementById('card-image-modal');
 
-    // Controles de Seleção de Modo
     document.getElementById('vs-bot-btn').onclick = () => {
         gameMode = 'vs-bot';
         currentDeckBuilderFor = 'p1';
         gameModeSelectionScreen.classList.add('hidden');
         deckBuilderScreen.classList.remove('hidden');
-        // Pré-inicializa o state para pegar nomes
         state = { p1: { name: 'Jogador' }, p2: { name: 'Inimigo' } };
         initializeDeckBuilder();
     };
@@ -573,31 +570,31 @@ const CARD_POOL = {
         currentDeckBuilderFor = 'p1';
         gameModeSelectionScreen.classList.add('hidden');
         deckBuilderScreen.classList.remove('hidden');
-        // Pré-inicializa o state para pegar nomes
         state = { p1: { name: 'Jogador 1' }, p2: { name: 'Jogador 2' } };
         initializeDeckBuilder();
     };
 
-    // Controles do Jogo
     document.getElementById('end-turn').onclick = endTurn;
     document.getElementById('undo-move').onclick = undoMove;
   
-    // Controles do Deck Builder
-    const startBtn = document.getElementById('start-game-btn');
-    startBtn.onclick = () => {
+    document.getElementById('start-game-btn').onclick = () => {
         const currentDeck = (currentDeckBuilderFor === 'p1') ? player1CustomDeck : player2CustomDeck;
         if (currentDeck.length !== DECK_SIZE) return;
-
         if (gameMode === 'vs-player' && currentDeckBuilderFor === 'p1') {
-            // Terminou o P1, agora é a vez do P2
             currentDeckBuilderFor = 'p2';
             alert('Baralho do Jogador 1 confirmado! Agora é a vez do Jogador 2.');
-            initializeDeckBuilder(); // Reinicia a UI para o P2
+            initializeDeckBuilder();
         } else {
-            // Terminou o Bot ou o P2, iniciar jogo
             deckBuilderScreen.classList.add('hidden');
             gameContainer.classList.remove('hidden');
             newGame();
+        }
+    };
+    
+    document.getElementById('modal-close-btn').onclick = hideCardImageModal;
+    cardImageModal.onclick = (e) => {
+        if (e.target === cardImageModal) {
+            hideCardImageModal();
         }
     };
   });
