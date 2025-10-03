@@ -216,10 +216,10 @@ body {
 
 /* Estilos do Jogo Principal */
 .game-container {
-  width: 1400px;
-  max-width: 100%;
-  height: 90vh;
-  max-height: 800px;
+  width: 100%;
+  max-width: 1600px;
+  height: 95vh;
+  max-height: 900px;
   background: rgba(31, 41, 55, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
@@ -258,6 +258,7 @@ body {
   border: 2px solid var(--accent-blue);
   display: flex; align-items: center; justify-content: center;
   font-size: 28px; font-weight: 700;
+  flex-shrink: 0;
 }
 .enemy-area .avatar { border-color: var(--accent-red); }
 
@@ -298,7 +299,7 @@ body {
 #bottom-player-health-bar { background: linear-gradient(90deg, var(--accent-green), #86efac); }
 #top-player-health-bar { background: linear-gradient(90deg, var(--accent-red), #fca5a5); }
 
-.resources { display: flex; gap: 12px; margin-top: 8px; align-items: flex-end; }
+.resources { display: flex; gap: 12px; margin-top: 8px; align-items: flex-end; flex-wrap: wrap; }
 .enemy-area .resources { justify-content: flex-end; }
 .resource-item {
   background: var(--bg-dark);
@@ -365,6 +366,7 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
 }
 
 .played-cards-area {
@@ -430,6 +432,9 @@ body {
   align-items: flex-end;
   padding: 12px;
   height: 250px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 100%;
 }
 
 .card {
@@ -660,4 +665,154 @@ body {
 #modal-close-btn:hover {
     background: #ff6666;
     transform: scale(1.1) rotate(90deg);
+}
+
+/* ------------------- */
+/* MEDIA QUERIES ABAIXO */
+/* ------------------- */
+
+/* Telas Médias (Tablets e Desktops Pequenos) */
+@media (max-width: 1200px) {
+  .card {
+    width: 140px;
+    height: 195px;
+  }
+  .hand {
+    gap: 12px;
+  }
+  .turn-controls button {
+    width: 180px;
+    padding: 8px 16px;
+  }
+}
+
+/* Telas Pequenas (Celulares) */
+@media (max-width: 768px) {
+  body {
+    padding: 8px;
+    overflow: auto; /* Permite rolar se o conteúdo estourar */
+  }
+
+  /* --- Layout Geral --- */
+  #logo-top-right { width: 80px; top: 10px; right: 10px; }
+  #copyright-bottom-right { display: none; }
+  
+  /* --- Tela de Seleção de Modo --- */
+  .mode-buttons { flex-direction: column; }
+  .mode-buttons button { min-width: unset; }
+
+  /* --- Tela de Construtor de Baralho --- */
+  #deck-builder-screen {
+      height: auto;
+      min-height: 95vh;
+      padding: 10px;
+  }
+  .deck-builder-main {
+      flex-direction: column;
+      gap: 16px;
+  }
+  .card-pool-container {
+      /* Damos uma altura mínima para o pool de cartas não espremer o resto */
+      min-height: 400px; 
+  }
+  .card-pool-filters {
+      flex-direction: column;
+      align-items: stretch;
+  }
+  .deck-builder-card {
+      width: 110px;
+      height: 154px;
+  }
+
+  /* --- Tela Principal do Jogo --- */
+  .game-container {
+    padding: 8px;
+    gap: 8px;
+    height: 100vh; /* Ocupa a tela inteira */
+    max-height: none;
+  }
+  
+  .top-bar {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .enemy-area { order: 1; }
+  .center-area { order: 2; }
+  .player-area { order: 3; }
+  
+  .player-area, .enemy-area {
+      width: 100%;
+      padding: 8px;
+      gap: 12px;
+  }
+  .avatar { width: 50px; height: 50px; font-size: 24px; }
+  .pv { font-size: 22px; }
+  .player-name { font-size: 14px; }
+  .resources { gap: 8px; font-size: 11px; }
+  .resource-item { padding: 3px 8px; }
+  .energy-orb { width: 18px; height: 18px; }
+  
+  #turn-indicator { font-size: 20px; }
+  .turn-controls { flex-direction: row; }
+  #end-turn, #undo-move { width: auto; flex: 1; padding: 10px 5px; font-size: 14px; }
+  
+  .board-area {
+    justify-content: flex-end; /* Empurra a mão para o fundo */
+  }
+  .hand-area-container {
+    position: static;
+    transform: none;
+  }
+  .hand {
+    height: 190px;
+    padding: 8px;
+    justify-content: flex-start; /* Alinha as cartas ao início para scroll */
+  }
+  .card {
+    width: 110px;
+    height: 160px;
+  }
+  .card-name { font-size: 12px; }
+  .card-cost { width: 24px; height: 24px; font-size: 14px; }
+  .card-desc { font-size: 10px; }
+  .card-art { height: 40px; font-size: 24px; }
+  .card-info-btn { width: 24px; height: 24px; }
+
+  .played-cards {
+      min-height: 80px;
+      align-items: center;
+  }
+  .played-cards .card {
+      width: 70px;
+      height: 98px;
+  }
+  .played-cards .card .card-info-btn {
+      display: none;
+  }
+  
+  .log-area {
+    bottom: 200px; /* Acima da área da mão */
+    left: 5px;
+    width: 150px;
+    height: 120px;
+    font-size: 10px;
+    z-index: 20;
+  }
+
+  /* Modais */
+  .transition-content h2 { font-size: 28px; }
+  .transition-content p { font-size: 16px; }
+}
+
+@media (max-width: 400px) {
+    .hand {
+        height: 160px;
+    }
+    .card {
+        width: 90px;
+        height: 130px;
+    }
+    .log-area {
+        bottom: 170px;
+    }
 }
