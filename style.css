@@ -122,11 +122,36 @@ body {
   padding: 16px;
   overflow: hidden;
 }
-.card-pool-container h2, .current-deck-container h2 { margin-bottom: 16px; border-bottom: 1px solid var(--bg-light); padding-bottom: 8px; }
+.card-pool-header {
+  border-bottom: 1px solid var(--bg-light);
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.card-pool-header h2 { margin-bottom: 12px; }
+.card-pool-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.card-pool-filters select {
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  border: 1px solid var(--bg-light);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.card-pool-filters select:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+}
+
 
 #card-pool, #current-deck-list {
   overflow-y: auto;
-  padding-right: 8px; /* Espaço para a barra de rolagem */
+  padding-right: 8px; 
 }
 
 #card-pool {

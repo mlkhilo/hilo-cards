@@ -28,7 +28,33 @@
     <p>Escolha <span id="deck-size-label">20</span> cartas para começar.</p>
     <div class="deck-builder-main">
         <div class="card-pool-container">
-            <h2>Cartas Disponíveis</h2>
+            <div class="card-pool-header">
+              <h2>Cartas Disponíveis</h2>
+              <div class="card-pool-filters">
+                  <select id="filter-rarity">
+                      <option value="all">Toda Raridade</option>
+                      <option value="basic">Básica</option>
+                      <option value="rare">Rara</option>
+                      <option value="legend">Lendária</option>
+                      <option value="joker">Joker</option>
+                  </select>
+                  <select id="filter-category">
+                      <option value="all">Toda Classe</option>
+                      <option value="creature">Criatura</option>
+                      <option value="effect">Efeito</option>
+                      <option value="joker">Joker</option>
+                  </select>
+                  <select id="filter-cost">
+                      <option value="all">Todo Custo</option>
+                      <option value="0">Custo 0</option>
+                      <option value="1">Custo 1</option>
+                      <option value="2">Custo 2</option>
+                      <option value="3">Custo 3</option>
+                      <option value="4">Custo 4</option>
+                      <option value="5+">Custo 5+</option>
+                  </select>
+              </div>
+            </div>
             <div id="card-pool"></div>
         </div>
         <div class="current-deck-container">

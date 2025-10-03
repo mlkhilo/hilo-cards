@@ -6,20 +6,20 @@ const MAX_HAND_SIZE = 8;
 // ----- Definição de Cartas -----
 const CARD_POOL = {
     // Básicas
-    espadachim: { id:'espadachim', name:'Espadachim', type:'basic', cost:1, desc:'Causa 2 de dano.', art:'⚔️', image: 'espadachim.png', play: ({ctx})=>dealDamage(ctx,2) },
-    escudo: { id:'escudo', name:'Escudo de Madeira', type:'basic', cost:1, desc:'Ganha 2 de escudo.', art:'🛡️', image: 'escudodemadeira.png' ,play: ({ctx})=>gainShield(ctx.player,2) },
-    flecha: { id:'flecha', name:'Flecha Rápida', type:'basic', cost:0, desc:'Causa 1 de dano.', art:'🏹',image: 'flecharapida.png' , play: ({ctx})=>dealDamage(ctx,1) },
-    pocao: { id:'pocao', name:'Poção Menor', type:'basic', cost:1, desc:'Cura 2 PV.', art:'🧪', image: 'curamenor.png', play: ({ctx})=>heal(ctx.player,2) },
-    martelo: { id:'martelo', name:'Martelo de Pedra', type:'basic', cost:2, desc:'Causa 3 de dano.', art:'🔨', image: 'martelodepedra.png', play: ({ctx})=>dealDamage(ctx,3) },
-    arqueiro: { id:'arqueiro', name:'Arqueiro', type:'basic', cost:2, desc:'2 de dano, ignora 1 de defesa.', art:'🎯', image: 'arqueiro.png', play: ({ctx})=>dealDamage(ctx,2, {ignoreDef:1}) },
-    goblin: { id:'goblin', name:'Goblin Saqueador', type:'basic', cost:1, desc:'Causa 3 de dano direto.', art:'👺', image: 'goblinsa.png', play: ({ctx})=>dealDamage(ctx,3) },
+    espadachim: { id:'espadachim', name:'Espadachim', type:'basic', category: 'creature', cost:1, desc:'Causa 2 de dano.', art:'⚔️', image: 'espadachim.png', play: ({ctx})=>dealDamage(ctx,2) },
+    escudo: { id:'escudo', name:'Escudo de Madeira', type:'basic', category: 'effect', cost:1, desc:'Ganha 2 de escudo.', art:'🛡️', image: 'escudodemadeira.png' ,play: ({ctx})=>gainShield(ctx.player,2) },
+    flecha: { id:'flecha', name:'Flecha Rápida', type:'basic', category: 'effect', cost:0, desc:'Causa 1 de dano.', art:'🏹',image: 'flecharapida.png' , play: ({ctx})=>dealDamage(ctx,1) },
+    pocao: { id:'pocao', name:'Poção Menor', type:'basic', category: 'effect', cost:1, desc:'Cura 2 PV.', art:'🧪', image: 'curamenor.png', play: ({ctx})=>heal(ctx.player,2) },
+    martelo: { id:'martelo', name:'Martelo de Pedra', type:'basic', category: 'effect', cost:2, desc:'Causa 3 de dano.', art:'🔨', image: 'martelodepedra.png', play: ({ctx})=>dealDamage(ctx,3) },
+    arqueiro: { id:'arqueiro', name:'Arqueiro', type:'basic', category: 'creature', cost:2, desc:'2 de dano, ignora 1 de defesa.', art:'🎯', image: 'arqueiro.png', play: ({ctx})=>dealDamage(ctx,2, {ignoreDef:1}) },
+    goblin: { id:'goblin', name:'Goblin Saqueador', type:'basic', category: 'creature', cost:1, desc:'Causa 3 de dano direto.', art:'👺', image: 'goblinsa.png', play: ({ctx})=>dealDamage(ctx,3) },
   
     // Raras
-    mago: { id:'mago', name:'Mago Aprendiz', type:'rare', cost:2, desc:'Causa 4 de dano.', art:'🧙', image: 'magoaprendiz.png', play: ({ctx})=>dealDamage(ctx,4) },
-    barreira: { id:'barreira', name:'Barreira de Pedra', type:'rare', cost:2, desc:'Ganha 5 de escudo.', art:'🧱', image: 'barreiradepedra.png', play: ({ctx})=>gainShield(ctx.player,5) },
-    lamina: { id:'lamina', name:'Lâmina Flamejante', type:'rare', cost:2, desc:'3 de dano, ignora toda a defesa.', art:'🔥', image: 'laminaflamejante.png', play: ({ctx})=>dealDamage(ctx,3, {ignoreDef:999}) },
-    pocaoM: { id:'pocaoM', name:'Poção Maior', type:'rare', cost:2, desc:'Cura 5 PV.', art:'💖', image: 'curamaior.png', play: ({ctx})=>heal(ctx.player,5) },
-    cacador: { id:'cacador', name:'Caçador Sombrio', type:'rare', cost:2, desc:'Causa 2 de dano e te dá 1 de energia.',  art:'🦇', image: 'cacadorsombrio.png', play: async ({ctx})=>{
+    mago: { id:'mago', name:'Mago Aprendiz', type:'rare', category: 'creature', cost:2, desc:'Causa 4 de dano.', art:'🧙', image: 'magoaprendiz.png', play: ({ctx})=>dealDamage(ctx,4) },
+    barreira: { id:'barreira', name:'Barreira de Pedra', type:'rare', category: 'effect', cost:2, desc:'Ganha 5 de escudo.', art:'🧱', image: 'barreiradepedra.png', play: ({ctx})=>gainShield(ctx.player,5) },
+    lamina: { id:'lamina', name:'Lâmina Flamejante', type:'rare', category: 'effect', cost:2, desc:'3 de dano, ignora toda a defesa.', art:'🔥', image: 'laminaflamejante.png', play: ({ctx})=>dealDamage(ctx,3, {ignoreDef:999}) },
+    pocaoM: { id:'pocaoM', name:'Poção Maior', type:'rare', category: 'effect', cost:2, desc:'Cura 5 PV.', art:'💖', image: 'curamaior.png', play: ({ctx})=>heal(ctx.player,5) },
+    cacador: { id:'cacador', name:'Caçador Sombrio', type:'rare', category: 'creature', cost:2, desc:'Causa 2 de dano e te dá 1 de energia.',  art:'🦇', image: 'cacadorsombrio.png', play: async ({ctx})=>{
         await dealDamage(ctx,2);
         log('Caçador Sombrio ativou seu efeito!');
         state[ctx.player].energy = Math.min(7, state[ctx.player].energy + 1);
@@ -27,27 +27,27 @@ const CARD_POOL = {
     }},
   
     // Lendárias
-    dragao: { id:'dragao', name:'Dragão Ancestral', type:'legend', cost:5, desc:'Causa 10 de dano.', image: 'dragaoancestral.png', art:'🐲', play: ({ctx})=>dealDamage(ctx,10) },
-    cavaleiro: { id:'cavaleiro', name:'Cavaleiro Imortal', type:'legend', cost:6, desc:'Causa 6 de dano e cura 3 de vida.', art:'👻', image: 'cavaleiroimortal.png', play: async ({ctx})=>{
+    dragao: { id:'dragao', name:'Dragão Ancestral', type:'legend', category: 'creature', cost:5, desc:'Causa 10 de dano.', image: 'dragaoancestral.png', art:'🐲', play: ({ctx})=>dealDamage(ctx,10) },
+    cavaleiro: { id:'cavaleiro', name:'Cavaleiro Imortal', type:'legend', category: 'creature', cost:6, desc:'Causa 6 de dano e cura 3 de vida.', art:'👻', image: 'cavaleiroimortal.png', play: async ({ctx})=>{
         await dealDamage(ctx,6);
         heal(ctx.player,3);
     }},
-    tempestade: { id:'tempestade', name:'Tempestade Arcana', type:'legend', cost:4, desc:'Causa 3 de dano e aplica 2 turnos de Sangramento (1 de dano por turno).', art:'🌪️', image: 'tempestadearcana.png', play: async ({ctx})=>{
+    tempestade: { id:'tempestade', name:'Tempestade Arcana', type:'legend', category: 'effect', cost:4, desc:'Causa 3 de dano e aplica 2 turnos de Sangramento (1 de dano por turno).', art:'🌪️', image: 'tempestadearcana.png', play: async ({ctx})=>{
         await dealDamage(ctx,3);
         applyEffect(ctx.opponent, {key:'bleed', turns:3, damage:1});
     }},
-    espadaDivina: { id:'espadaDivina', name:'Espada Divina', type:'legend', cost:3, desc:'Dobra o dano da próxima carta de ataque nos próximos 2 turnos.', art:'✨', image: 'espadadivina.png', play: ({ctx})=>applyEffect(ctx.player, {key:'doubleNextAttack',turns:2}) },
-    feiticeira: { id: 'feiticeira', name: 'Feiticeira da Lua', type: 'legend', cost: 3, desc: 'Recupera 3 de PV e ganha 2 de energia.', art: '🌙', image: 'feiticeiradalua.png', play: ({ctx}) => {
+    espadaDivina: { id:'espadaDivina', name:'Espada Divina', type:'legend', category: 'effect', cost:3, desc:'Dobra o dano da próxima carta de ataque nos próximos 2 turnos.', art:'✨', image: 'espadadivina.png', play: ({ctx})=>applyEffect(ctx.player, {key:'doubleNextAttack',turns:2}) },
+    feiticeira: { id: 'feiticeira', name: 'Feiticeira da Lua', type: 'legend', category: 'creature', cost: 3, desc: 'Recupera 3 de PV e ganha 2 de energia.', art: '🌙', image: 'feiticeiradalua.png', play: ({ctx}) => {
         heal(ctx.player, 3);
         state[ctx.player].energy = Math.min(7, state[ctx.player].energy + 2);
         log(`${state[ctx.player].name} sente a energia da lua!`);
     }},
 
     // Jokers
-    jokerRed: { id:'jokerRed', name:'Joker Vermelho', type:'joker', cost:2, desc:'Multiplica por 2 todo o dano neste turno.', art:'🔴', image: 'jokervermelho.png', play: ({ctx})=>applyEffect(ctx.player, {key:'doubleAllDamage',turns:1}) },
-    jokerBlue: { id:'jokerBlue', name:'Joker Azul', type:'joker', cost:1, desc:'Defesas também curam 2 PV neste turno.', art:'🔵', image: 'jokerazul.png', play: ({ctx})=>applyEffect(ctx.player, {key:'defHeal',turns:1}) },
-    jokerGreen: { id:'jokerGreen', name:'Joker Verde', type:'joker', cost:3, desc:'Permite comprar 2 cartas.', art:'🟢', image: 'jokerverde.png', play: ({ctx})=>{ drawCard(ctx.player); drawCard(ctx.player); } },
-    jokerGold: { id:'jokerGold', name:'Joker Dourado', type:'joker', cost:1, desc:'Revive 1 carta do descarte para a mão.', art:'🟡', image: 'jokerdourado.png', play: ({ctx})=>reviveFromDiscard(ctx) }
+    jokerRed: { id:'jokerRed', name:'Joker Vermelho', type:'joker', category: 'joker', cost:2, desc:'Multiplica por 2 todo o dano neste turno.', art:'🔴', image: 'jokervermelho.png', play: ({ctx})=>applyEffect(ctx.player, {key:'doubleAllDamage',turns:1}) },
+    jokerBlue: { id:'jokerBlue', name:'Joker Azul', type:'joker', category: 'joker', cost:1, desc:'Defesas também curam 2 PV neste turno.', art:'🔵', image: 'jokerazul.png', play: ({ctx})=>applyEffect(ctx.player, {key:'defHeal',turns:1}) },
+    jokerGreen: { id:'jokerGreen', name:'Joker Verde', type:'joker', category: 'joker', cost:3, desc:'Permite comprar 2 cartas.', art:'🟢', image: 'jokerverde.png', play: ({ctx})=>{ drawCard(ctx.player); drawCard(ctx.player); } },
+    jokerGold: { id:'jokerGold', name:'Joker Dourado', type:'joker', category: 'joker', cost:1, desc:'Revive 1 carta do descarte para a mão.', art:'🟡', image: 'jokerdourado.png', play: ({ctx})=>reviveFromDiscard(ctx) }
   };
   
   // ----- Estado do Jogo -----
@@ -56,6 +56,11 @@ const CARD_POOL = {
   let player1CustomDeck = [];
   let player2CustomDeck = [];
   let currentDeckBuilderFor = 'p1';
+  let deckBuilderFilters = {
+    rarity: 'all',
+    category: 'all',
+    cost: 'all'
+  };
   
   function getOpponent(playerKey) {
     return playerKey === 'p1' ? 'p2' : 'p1';
@@ -430,7 +435,6 @@ const CARD_POOL = {
       hand.appendChild(el);
     });
     
-    // Atualiza o contador de cartas na mão
     document.getElementById('hand-counter').textContent = `${bottomP.hand.length}/${MAX_HAND_SIZE}`;
     
     const playedCardsArea = document.getElementById('played-cards');
@@ -525,30 +529,57 @@ const CARD_POOL = {
       }
   }
 
+  function renderFilteredCardPool() {
+    const cardPoolEl = document.getElementById('card-pool');
+    cardPoolEl.innerHTML = '';
+    
+    const allCards = Object.values(CARD_POOL);
+
+    const filteredCards = allCards.filter(card => {
+        // Filtro de Raridade
+        if (deckBuilderFilters.rarity !== 'all' && card.type !== deckBuilderFilters.rarity) {
+            return false;
+        }
+        // Filtro de Categoria
+        if (deckBuilderFilters.category !== 'all' && card.category !== deckBuilderFilters.category) {
+            return false;
+        }
+        // Filtro de Custo
+        if (deckBuilderFilters.cost !== 'all') {
+            const cost = deckBuilderFilters.cost;
+            if (cost === '5+' && card.cost < 5) {
+                return false;
+            }
+            if (cost !== '5+' && card.cost != cost) {
+                return false;
+            }
+        }
+        return true;
+    });
+
+    filteredCards.forEach(card => {
+        const cardEl = renderCard(card);
+        cardEl.classList.add('deck-builder-card');
+        cardEl.onclick = () => addCardToDeck(card);
+        
+        const infoBtn = document.createElement('button');
+        infoBtn.className = 'card-info-btn';
+        infoBtn.innerHTML = '🔍';
+        infoBtn.onclick = (e) => {
+            e.stopPropagation();
+            showCardImageModal(card);
+        };
+        cardEl.appendChild(infoBtn);
+
+        cardPoolEl.appendChild(cardEl);
+    });
+  }
+
   function initializeDeckBuilder() {
       document.getElementById('deck-builder-title').textContent = `Monte seu Baralho - ${state[currentDeckBuilderFor].name}`;
-      const cardPoolEl = document.getElementById('card-pool');
-      cardPoolEl.innerHTML = '';
       document.getElementById('deck-size-label').textContent = DECK_SIZE;
-      const uniqueCards = Object.values(CARD_POOL);
-  
-      uniqueCards.forEach(card => {
-          const cardEl = renderCard(card);
-          cardEl.classList.add('deck-builder-card');
-          cardEl.onclick = () => addCardToDeck(card);
-          
-          const infoBtn = document.createElement('button');
-          infoBtn.className = 'card-info-btn';
-          infoBtn.innerHTML = '🔍';
-          infoBtn.onclick = (e) => {
-              e.stopPropagation();
-              showCardImageModal(card);
-          };
-          cardEl.appendChild(infoBtn);
-
-          cardPoolEl.appendChild(cardEl);
-      });
       
+      renderFilteredCardPool();
       updateDeckBuilderUI();
   }
 
@@ -600,4 +631,18 @@ const CARD_POOL = {
             hideCardImageModal();
         }
     };
+
+    // Event Listeners para os filtros
+    document.getElementById('filter-rarity').addEventListener('change', (e) => {
+      deckBuilderFilters.rarity = e.target.value;
+      renderFilteredCardPool();
+    });
+    document.getElementById('filter-category').addEventListener('change', (e) => {
+      deckBuilderFilters.category = e.target.value;
+      renderFilteredCardPool();
+    });
+    document.getElementById('filter-cost').addEventListener('change', (e) => {
+      deckBuilderFilters.cost = e.target.value;
+      renderFilteredCardPool();
+    });
   });
