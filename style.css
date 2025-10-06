@@ -667,6 +667,45 @@ body {
     transform: scale(1.1) rotate(90deg);
 }
 
+/* Tela de Vitória */
+#victory-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(11, 15, 25, 0.95);
+    z-index: 250;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--text-light);
+    backdrop-filter: blur(10px);
+}
+.victory-content h1 {
+    font-size: 48px;
+    color: var(--accent-gold);
+    margin-bottom: 24px;
+    text-shadow: 0 0 15px var(--accent-gold);
+}
+.victory-content button {
+    padding: 15px 30px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent-green);
+    color: var(--bg-dark);
+    transition: all 0.2s ease;
+}
+.victory-content button:hover {
+    transform: scale(1.05);
+    background: #4ade80;
+}
+
+
 /* ------------------- */
 /* MEDIA QUERIES ABAIXO */
 /* ------------------- */
@@ -799,9 +838,11 @@ body {
     z-index: 20;
   }
 
-  /* Modais */
+  /* Modais e Telas de Overlay */
   .transition-content h2 { font-size: 28px; }
   .transition-content p { font-size: 16px; }
+  .victory-content h1 { font-size: 36px; }
+
 }
 
 @media (max-width: 400px) {

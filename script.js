@@ -345,8 +345,7 @@ const CARD_POOL = {
           state.gameEnded = true;
           const winner = state.p1.pv > 0 ? state.p1.name : state.p2.name;
           setTimeout(() => {
-              alert(`Fim de Jogo! Vencedor: ${winner}`);
-              window.location.reload(); 
+              showVictoryScreen(winner);
           }, 1000);
           return true;
       }
@@ -468,6 +467,14 @@ const CARD_POOL = {
   function hideCardImageModal() {
       const modal = document.getElementById('card-image-modal');
       modal.classList.add('hidden');
+  }
+
+  // ----- Tela de Vitória -----
+  function showVictoryScreen(winnerName) {
+      const victoryScreen = document.getElementById('victory-screen');
+      const winnerText = document.getElementById('winner-name-text');
+      winnerText.textContent = `${winnerName} Venceu!`;
+      victoryScreen.classList.remove('hidden');
   }
   
   // ----- Lógica do Deck Builder -----
@@ -630,6 +637,10 @@ const CARD_POOL = {
         if (e.target === cardImageModal) {
             hideCardImageModal();
         }
+    };
+
+    document.getElementById('play-again-btn').onclick = () => {
+        window.location.reload();
     };
 
     // Event Listeners para os filtros
