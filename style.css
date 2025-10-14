@@ -859,15 +859,12 @@ body {
     margin-bottom: 24px;
     text-shadow: 0 0 15px var(--accent-gold);
 }
-<<<<<<< HEAD
 #victory-subtitle {
     font-size: 18px;
     color: var(--text-muted);
     margin-top: -16px;
     margin-bottom: 32px;
 }
-=======
->>>>>>> df730a3fbcc960b9726ae91e7b4ad0d2a9c9fec6
 .victory-content button {
     padding: 15px 30px;
     font-size: 20px;
