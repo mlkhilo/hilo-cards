@@ -14,6 +14,7 @@
   --glow-yellow: 0 0 15px 5px #f59e0b, inset 0 0 8px 3px #fde68a;
   --glow-green: 0 0 15px 5px #22c55e, inset 0 0 8px 3px #86efac;
   --glow-purple: 0 0 15px 5px #a855f7, inset 0 0 8px 3px #d8b4fe;
+  --glow-sombria: 0 0 15px 5px #4c1d95, inset 0 0 8px 3px #a78bfa;
 }
 
 * {
@@ -60,18 +61,24 @@ body {
 }
 
 
-/* Estilos da Tela de Seleção de Modo */
-#game-mode-selection {
+/* Estilos da Tela de Seleção de Modo e Nomes */
+#game-mode-selection, #player-name-screen {
   text-align: center;
   background: rgba(17, 24, 39, 0.9);
   padding: 40px;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 500px;
 }
-#game-mode-selection h1 { color: var(--accent-gold); margin-bottom: 16px; font-size: 32px; }
-#game-mode-selection p { color: var(--text-muted); margin-bottom: 32px; font-size: 18px; }
-.mode-buttons { display: flex; gap: 24px; }
+#game-mode-selection h1, #player-name-screen h1 { 
+    color: var(--accent-gold); margin-bottom: 16px; font-size: 32px; 
+}
+#game-mode-selection p { 
+    color: var(--text-muted); margin-bottom: 32px; font-size: 18px; 
+}
+.mode-buttons { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
 .mode-buttons button {
   padding: 15px 30px;
   font-size: 18px;
@@ -86,7 +93,119 @@ body {
 #vs-bot-btn:hover { background: #60a5fa; transform: scale(1.05); }
 #vs-player-btn { background: var(--accent-green); color: var(--bg-dark); }
 #vs-player-btn:hover { background: #4ade80; transform: scale(1.05); }
+#event-btn { background: #4c1d95; color: var(--text-light); }
+#event-btn:hover { background: #6d28d9; transform: scale(1.05); }
 
+
+/* Nova Tela de Evento */
+#event-intro-screen {
+  text-align: center;
+  background: radial-gradient(circle, #1e1b4b 0%, #111827 100%);
+  padding: 40px;
+  border-radius: 16px;
+  border: 1px solid #4c1d95;
+  box-shadow: 0 10px 40px rgba(76, 29, 149, 0.6);
+  width: 100%;
+  max-width: 600px;
+  color: var(--text-light);
+}
+.event-title-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.event-title-container h1 {
+    color: #a78bfa;
+    font-size: 42px;
+    text-shadow: 0 0 10px #a78bfa;
+}
+.event-icon {
+    width: 50px;
+    filter: drop-shadow(0 0 8px #a78bfa);
+}
+#event-intro-screen p {
+    color: var(--text-muted);
+    margin-bottom: 32px;
+    font-size: 18px;
+    line-height: 1.6;
+}
+.event-challenges {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+}
+.challenge-box {
+    background: var(--bg-medium);
+    border: 1px solid var(--bg-light);
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+#start-event-btn {
+    padding: 15px 30px;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #6d28d9;
+    color: var(--text-light);
+    width: 100%;
+}
+#start-event-btn:hover {
+    background: #8b5cf6;
+    transform: scale(1.03);
+}
+
+/* Tela de Nomes */
+#player-name-screen h1 { font-size: 28px; margin-bottom: 32px;}
+.name-input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    text-align: left;
+}
+.name-input-group label {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+.name-input-group input {
+    width: 100%;
+    padding: 12px;
+    font-size: 18px;
+    background: var(--bg-dark);
+    border: 1px solid var(--bg-light);
+    border-radius: 8px;
+    color: var(--text-light);
+}
+.name-input-group input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+}
+#confirm-names-btn {
+    width: 100%;
+    padding: 15px 30px;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--accent-gold);
+    color: var(--bg-dark);
+    margin-top: 16px;
+}
+#confirm-names-btn:hover {
+    background: #fbbf24;
+    transform: scale(1.03);
+}
 
 /* Estilos da Tela de Montagem de Baralho */
 #deck-builder-screen {
@@ -264,7 +383,31 @@ body {
 
 .player-stats { flex: 1; }
 .enemy-area .player-stats { text-align: right; }
+
+.player-name-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.enemy-area .player-name-line {
+    justify-content: flex-end;
+}
 .player-name { font-size: 16px; font-weight: 600; color: var(--text-muted); }
+.edit-name-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px;
+    line-height: 1;
+    border-radius: 4px;
+}
+.edit-name-btn:hover {
+    background-color: var(--bg-light);
+    color: var(--text-light);
+}
+
 
 .pv-line {
     display: flex;
@@ -514,6 +657,29 @@ body {
     transform: scale(1.1);
 }
 
+/* Ícone Lateral para Cartas Especiais */
+.card-side-icon {
+    position: absolute;
+    top: 50%;
+    right: -10px;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background-color: rgba(0,0,0,0.6);
+    border-radius: 50%;
+    border: 1px solid #a78bfa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 15;
+    padding: 4px;
+}
+.card-side-icon img {
+    width: 100%;
+    height: 100%;
+}
+
+
 .card[data-type="basic"] {
   border-color: #3b82f6;
   box-shadow: var(--glow-blue), 0 8px 25px rgba(0,0,0,0.5);
@@ -529,6 +695,10 @@ body {
 .card[data-type="joker"] {
   border-color: #a855f7;
   box-shadow: var(--glow-purple), 0 8px 25px rgba(0,0,0,0.5);
+}
+.card[data-type="sombria"] {
+  border-color: #a855f7;
+  box-shadow: var(--glow-sombria), 0 8px 25px rgba(0,0,0,0.5);
 }
 
 .card-desc { font-size: 12px; color: var(--text-muted); flex: 1; }
@@ -689,6 +859,15 @@ body {
     margin-bottom: 24px;
     text-shadow: 0 0 15px var(--accent-gold);
 }
+<<<<<<< HEAD
+#victory-subtitle {
+    font-size: 18px;
+    color: var(--text-muted);
+    margin-top: -16px;
+    margin-bottom: 32px;
+}
+=======
+>>>>>>> df730a3fbcc960b9726ae91e7b4ad0d2a9c9fec6
 .victory-content button {
     padding: 15px 30px;
     font-size: 20px;

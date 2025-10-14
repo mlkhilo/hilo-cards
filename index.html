@@ -1,91 +1,126 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Jogo de Cartas - Batalha de Decks</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batalha de Decks - Carregando...</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos gerais para a página */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Container principal da tela de carregamento */
+        .loading-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            /* Define a imagem de fundo */
+            background-image: url('tela.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: white;
+            position: relative;
+        }
+        
+        /* Efeito para melhorar a qualidade visual da imagem de fundo */
+        .loading-screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.1); /* Escurece levemente para dar profundidade */
+            backdrop-filter: saturate(120%) contrast(110%); /* Realça a saturação e o contraste */
+        }
+
+        /* Container que agrupa o conteúdo de carregamento no canto */
+        .loading-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 350px;
+            max-width: 80%;
+            text-align: left;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 1.5em; /* Tamanho ajustado para o canto */
+            margin: 0;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+        }
+
+        .copyright {
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Container da barra de progresso */
+        .progress-bar-container {
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 5px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            margin-top: 5px;
+        }
+
+        /* Barra de progresso que se preenche */
+        .progress-bar {
+            width: 0%;
+            height: 15px; /* Altura ajustada */
+            background: linear-gradient(90deg, #6a3ab2, #8e44ad);
+            border-radius: 5px;
+            /* Animação que dura 6 segundos */
+            animation: fill-progress 6s linear forwards;
+        }
+
+        /* Animação para preencher a barra de 0% a 100% */
+        @keyframes fill-progress {
+            from {
+                width: 0%;
+            }
+            to {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
 
-  <img id="logo-top-right" src="hilocards.png" alt="Logo Hilo Cards">
-  <div id="copyright-bottom-right">hilo.inc</div>
-
-  <div id="game-mode-selection">
-      <h1>Batalha de Decks</h1>
-      <p>Escolha o modo de jogo:</p>
-      <div class="mode-buttons">
-          <button id="vs-bot-btn">Jogador vs. Bot</button>
-          <button id="vs-player-btn">Jogador vs. Jogador</button>
-      </div>
-  </div>
-
-  <div id="deck-builder-screen" class="hidden">
-    <h1 id="deck-builder-title">Monte seu Baralho</h1>
-    <p>Escolha <span id="deck-size-label">20</span> cartas para começar.</p>
-    <div class="deck-builder-main">
-        <div class="card-pool-container">
-            <div class="card-pool-header">
-              <h2>Cartas Disponíveis</h2>
-              <div class="card-pool-filters">
-                  <select id="filter-rarity">
-                      <option value="all">Toda Raridade</option>
-                      <option value="basic">Básica</option>
-                      <option value="rare">Rara</option>
-                      <option value="legend">Lendária</option>
-                      <option value="joker">Joker</option>
-                  </select>
-                  <select id="filter-category">
-                      <option value="all">Toda Classe</option>
-                      <option value="creature">Criatura</option>
-                      <option value="effect">Efeito</option>
-                      <option value="joker">Joker</option>
-                  </select>
-                  <select id="filter-cost">
-                      <option value="all">Todo Custo</option>
-                      <option value="0">Custo 0</option>
-                      <option value="1">Custo 1</option>
-                      <option value="2">Custo 2</option>
-                      <option value="3">Custo 3</option>
-                      <option value="4">Custo 4</option>
-                      <option value="5+">Custo 5+</option>
-                  </select>
-              </div>
+    <div class="loading-screen">
+        <div class="loading-container">
+            <div class="copyright">hilo.inc</div>
+            <h1>Preparando a Batalha...</h1>
+            <div class="progress-bar-container">
+                <div class="progress-bar"></div>
             </div>
-            <div id="card-pool"></div>
-        </div>
-        <div class="current-deck-container">
-            <h2>Seu Baralho (<span id="deck-counter">0/20</span>)</h2>
-            <div id="current-deck-list"></div>
-            <button id="start-game-btn" disabled>Confirmar Baralho</button>
         </div>
     </div>
-  </div>
 
-  <div class="game-container hidden">
-    <div class="top-bar">
-      <div class="enemy-area">
-        <div class="player-stats">
-          <div class="player-name" id="top-player-name">Inimigo</div>
-          <div class="pv-line">
-            <div class="pv" id="top-player-pv">40</div>
-            <img id="top-player-bleed-icon" src="sangue.png" class="status-icon hidden" alt="Ícone de Sangramento" title="Sangramento: Causa 1 de dano no início do turno.">
-          </div>
-          <div class="health-bar-container">
-            <div id="top-player-health-bar" class="health-bar"></div>
-          </div>
-          <div class="resources">
-            <div class="resource-item">Baralho: <span id="top-player-deck">20</span></div>
-            <div class="resource-item">Descarte: <span id="top-player-discard">0</span></div>
-            <div class="resource-item">Energia: <span id="top-player-energy">0</span></div>
-          </div>
-        </div>
-        <div id="top-player-avatar" class="avatar">🤖</div>
-      </div>
+    <script>
+        // Redireciona para jogo.html após 6 segundos
+        setTimeout(function() {
+            window.location.href = 'jogo.html';
+        }, 6000); // 6000 milissegundos = 6 segundos
+    </script>
 
+<<<<<<< HEAD
+=======
       <div class="center-area">
         <div id="turn-indicator">Turno 1</div>
         <div class="turn-controls">
@@ -155,5 +190,6 @@
   </div>
 
 <script src="script.js"></script>
+>>>>>>> df730a3fbcc960b9726ae91e7b4ad0d2a9c9fec6
 </body>
 </html>

@@ -2,6 +2,7 @@
 const MAX_PV = 40;
 const DECK_SIZE = 20;
 const MAX_HAND_SIZE = 8;
+const BOT_DIFFICULTIES = ['Médio', 'Difícil', 'Impossível'];
 
 // ----- Definição de Cartas -----
 const CARD_POOL = {
@@ -43,6 +44,26 @@ const CARD_POOL = {
         log(`${state[ctx.player].name} sente a energia da lua!`);
     }},
 
+    // Sombria (NOVA RARIDADE)
+    crupiesombrio: {
+        id: 'crupiesombrio', name: 'Crupie Sombrio', type: 'sombria', category: 'creature', cost: 4, 
+        desc: 'Rouba TODA a energia do inimigo e cura o dobro do valor roubado em PV.',
+        art: '🎭', image: 'crupiesombrio.png',
+        play: ({ ctx }) => {
+            const opponent = state[ctx.opponent];
+            const energyStolen = opponent.energy;
+            if (energyStolen > 0) {
+                opponent.energy = 0;
+                const healthGained = energyStolen * 2;
+                heal(ctx.player, healthGained);
+                log(`${state[ctx.player].name} usou o Crupie Sombrio, roubando ${energyStolen} de energia e curando ${healthGained} PV!`);
+            } else {
+                log('O Crupie Sombrio não encontrou energia para roubar.');
+            }
+            updateUI();
+        }
+    },
+
     // Jokers
     jokerRed: { id:'jokerRed', name:'Joker Vermelho', type:'joker', category: 'joker', cost:2, desc:'Multiplica por 2 todo o dano neste turno.', art:'🔴', image: 'jokervermelho.png', play: ({ctx})=>applyEffect(ctx.player, {key:'doubleAllDamage',turns:1}) },
     jokerBlue: { id:'jokerBlue', name:'Joker Azul', type:'joker', category: 'joker', cost:1, desc:'Defesas também curam 2 PV neste turno.', art:'🔵', image: 'jokerazul.png', play: ({ctx})=>applyEffect(ctx.player, {key:'defHeal',turns:1}) },
@@ -56,28 +77,36 @@ const CARD_POOL = {
   let player1CustomDeck = [];
   let player2CustomDeck = [];
   let currentDeckBuilderFor = 'p1';
-  let deckBuilderFilters = {
-    rarity: 'all',
-    category: 'all',
-    cost: 'all'
-  };
-  
+  let deckBuilderFilters = { rarity: 'all', category: 'all', cost: 'all' };
+  let isCrupieSombrioUnlocked = false;
+  let eventState = { isActive: false, stage: 0 };
+
+
   function getOpponent(playerKey) {
     return playerKey === 'p1' ? 'p2' : 'p1';
   }
 
   function newGame() {
+    let p1Name = 'Jogador';
+    let p2Name = 'Inimigo';
+    let p2Deck = shuffle(buildStarterDeck());
+
+    if (gameMode === 'vs-player') {
+        p1Name = state.p1.name;
+        p2Name = state.p2.name;
+        p2Deck = shuffle(player2CustomDeck);
+    } else if (gameMode === 'event') {
+        p1Name = state.p1.name;
+        p2Name = `Bot ${BOT_DIFFICULTIES[eventState.stage]}`;
+    } else { // vs-bot
+        p1Name = state.p1.name;
+    }
+
     state = {
       turn: 1,
       active: 'p1',
-      p1: { id: 'p1', name: 'Jogador 1', pv: MAX_PV, deck: shuffle(player1CustomDeck), hand: [], discard: [], energy: 0, shield: 0 },
-      p2: { 
-          id: 'p2', 
-          name: gameMode === 'vs-bot' ? 'Inimigo' : 'Jogador 2', 
-          pv: MAX_PV, 
-          deck: gameMode === 'vs-bot' ? shuffle(buildStarterDeck()) : shuffle(player2CustomDeck), 
-          hand: [], discard: [], energy: 0, shield: 0 
-      },
+      p1: { id: 'p1', name: p1Name, pv: MAX_PV, deck: shuffle(player1CustomDeck), hand: [], discard: [], energy: 0, shield: 0 },
+      p2: { id: 'p2', name: p2Name, pv: MAX_PV, deck: p2Deck, hand: [], discard: [], energy: 0, shield: 0 },
       activeEffects: [],
       log: [],
       gameEnded: false,
@@ -141,7 +170,7 @@ const CARD_POOL = {
   function startTurn(who) {
       if (state.gameEnded) return;
       state.active = who;
-      if(gameMode === 'vs-player'){
+      if(gameMode === 'vs-player' && state.active !== 'p1'){
         const transitionScreen = document.getElementById('turn-transition-screen');
         document.getElementById('transition-title').textContent = `Vez do ${state[who].name}`;
         transitionScreen.classList.remove('hidden');
@@ -156,7 +185,7 @@ const CARD_POOL = {
 
   function executeTurnStart(who) {
     const p = state[who];
-    const isHumanTurn = (gameMode === 'vs-bot' && who === 'p1') || gameMode === 'vs-player';
+    const isHumanTurn = (gameMode !== 'vs-player' && who === 'p1') || gameMode === 'vs-player';
     if (isHumanTurn) {
         state.playedCards = [];
         state.undoStack = [];
@@ -165,6 +194,11 @@ const CARD_POOL = {
     }
     p.shield = 0;
     p.energy = Math.min(7, p.energy + 3);
+    // Bônus para o Bot Impossível do Evento
+    if (gameMode === 'event' && who === 'p2' && eventState.stage === 2) {
+        p.energy = Math.min(7, p.energy + 1);
+        log('A presença do Bot Impossível gera +1 de Energia extra!');
+    }
     log(`${p.name} começou o turno e ganhou +3 de Energia.`);
     state.activeEffects = state.activeEffects.filter(eff => {
         if (eff.owner === who) {
@@ -185,7 +219,9 @@ const CARD_POOL = {
     });
     drawCard(who);
     updateUI();
-    if (gameMode === 'vs-bot' && who === 'p2') setTimeout(enemyAI, 1000);
+    if ((gameMode === 'vs-bot' || gameMode === 'event') && who === 'p2') {
+        setTimeout(enemyAI, 1000);
+    }
   }
   
   function endTurn() {
@@ -250,24 +286,62 @@ const CARD_POOL = {
       updateUI();
   }
   
-  function enemyAI() {
-      if (state.gameEnded) return;
-      const enemy = state.p2;
-      const playableCards = enemy.hand.map((c, i) => ({card: c, index: i})).filter(item => item.card.cost <= enemy.energy);
-      if (playableCards.length > 0) {
-          const { card, index } = playableCards[0];
-          enemy.energy -= card.cost;
-          const playedCard = enemy.hand.splice(index, 1)[0];
-          log(`Inimigo jogou ${card.name}.`);
-          const context = { ctx: { player: 'p2', opponent: 'p1' } };
-          card.play(context);
-          state.playedCards.push(playedCard);
-          updateUI();
-          setTimeout(() => enemyAI(), 1200);
-      } else {
-          setTimeout(endTurn, 700);
-      }
-  }
+    // ----- IA do Inimigo com Dificuldades -----
+    async function playCardAsBot(handIdx) {
+        const p = state.p2;
+        const card = p.hand[handIdx];
+        if (!card || card.cost > p.energy) return;
+        p.energy -= card.cost;
+        const playedCard = p.hand.splice(handIdx, 1)[0];
+        log(`Inimigo jogou ${card.name}.`);
+        const context = { ctx: { player: 'p2', opponent: 'p1' } };
+        await card.play(context);
+        state.playedCards.push(playedCard);
+        updateUI();
+    }
+
+    async function enemyAI() {
+        if (state.gameEnded) return;
+
+        let difficulty = 'easy'; // Padrão para vs-bot normal
+        if (gameMode === 'event' && eventState.isActive) {
+            difficulty = BOT_DIFFICULTIES[eventState.stage].toLowerCase();
+        }
+
+        const getPlayable = () => state.p2.hand.map((c, i) => ({ card: c, index: i }))
+            .filter(item => item.card.cost <= state.p2.energy)
+            .sort((a, b) => b.card.cost - a.card.cost); // Prioriza cartas mais caras
+
+        let playable = getPlayable();
+        if (playable.length > 0) {
+            let move;
+            if (difficulty === 'impossível' || difficulty === 'difícil') {
+                // Estratégia Difícil/Impossível: mais inteligente
+                const healCards = playable.filter(m => ['pocao', 'pocaoM', 'feiticeira', 'cavaleiro', 'crupiesombrio'].includes(m.card.id));
+                const damageCards = playable.filter(m => CARD_POOL[m.card.id].play.toString().includes('dealDamage'));
+
+                if (state.p2.pv < 15 && healCards.length > 0) {
+                    move = healCards[0]; // Cura se estiver com vida baixa
+                } else if (state.p1.pv < 10 && damageCards.length > 0) {
+                    move = damageCards.sort((a,b) => (b.card.cost*2) - a.card.cost)[0]; // Tenta finalizar
+                } else {
+                    move = playable[0]; // Joga a carta mais cara que puder
+                }
+            } else if (difficulty === 'médio') {
+                // Estratégia Média: prioriza dano
+                 const damageCards = playable.filter(m => CARD_POOL[m.card.id].play.toString().includes('dealDamage'));
+                 move = damageCards.length > 0 ? damageCards[0] : playable[0];
+            } else {
+                // Estratégia Fácil (original)
+                move = playable.sort(() => Math.random() - 0.5)[0];
+            }
+            
+            await playCardAsBot(move.index);
+            setTimeout(() => enemyAI(), 1200); // Tenta jogar outra carta
+        } else {
+            setTimeout(endTurn, 700); // Termina o turno se não houver jogadas
+        }
+    }
   
   // ----- Efeitos das Cartas -----
   async function dealDamage(ctx, amount, opts = {}) {
@@ -283,7 +357,7 @@ const CARD_POOL = {
     log(`${state[ctx.player].name} causou ${dmg} de dano a ${defender.name}. ${shieldBlock} bloqueado.`);
     const targetPlayerKey = ctx.opponent;
     let targetAvatarId = '';
-    if (gameMode === 'vs-bot') {
+    if (gameMode === 'vs-bot' || gameMode === 'event') {
         targetAvatarId = targetPlayerKey === 'p1' ? 'bottom-player-avatar' : 'top-player-avatar';
     } else {
         targetAvatarId = state.active === targetPlayerKey ? 'bottom-player-avatar' : 'top-player-avatar';
@@ -340,6 +414,22 @@ const CARD_POOL = {
   }
   
   function checkWin() {
+<<<<<<< HEAD
+    if (state.gameEnded) return true;
+    if (state.p1.pv <= 0 || state.p2.pv <= 0) {
+        state.gameEnded = true;
+        const winner = state.p1.pv > 0 ? state.p1 : state.p2;
+
+        if (gameMode === 'event' && eventState.isActive) {
+            handleEventEnd(winner.id === 'p1');
+            return true;
+        }
+        
+        setTimeout(() => showVictoryScreen(winner.name), 1000);
+        return true;
+    }
+    return false;
+=======
       if (state.gameEnded) return true;
       if (state.p1.pv <= 0 || state.p2.pv <= 0) {
           state.gameEnded = true;
@@ -350,14 +440,38 @@ const CARD_POOL = {
           return true;
       }
       return false;
+>>>>>>> df730a3fbcc960b9726ae91e7b4ad0d2a9c9fec6
   }
   
+  function changePlayerName(playerKey) {
+      if (!state || state.gameEnded) return;
+      const currentName = state[playerKey].name;
+      const newName = prompt(`Digite o novo nome para ${currentName}:`, currentName);
+      if (newName && newName.trim() !== '' && newName.length <= 15) {
+          state[playerKey].name = newName.trim();
+          log(`O nome de ${currentName} foi alterado para ${state[playerKey].name}.`);
+          updateUI();
+      } else if (newName !== null) {
+          alert('Nome inválido. Por favor, insira um nome com até 15 caracteres.');
+      }
+  }
+
   // ----- Renderização e UI -----
   function renderCard(card, { isSmall = false } = {}) {
     const el = document.createElement('div');
     el.className = 'card';
     if(isSmall) el.classList.add('small-card');
     el.dataset.type = card.type;
+
+    if (card.id === 'crupiesombrio') {
+        const sideIconContainer = document.createElement('div');
+        sideIconContainer.className = 'card-side-icon';
+        const sideIconImg = document.createElement('img');
+        sideIconImg.src = 'sombrio.png';
+        sideIconImg.alt = 'Ícone Sombrio';
+        sideIconContainer.appendChild(sideIconImg);
+        el.appendChild(sideIconContainer);
+    }
 
     if (card.image) {
       el.classList.add('full-image');
@@ -379,7 +493,7 @@ const CARD_POOL = {
   function updateUI() {
     if(!state) return;
 
-    const bottomPlayerKey = (gameMode === 'vs-player') ? state.active : 'p1';
+    const bottomPlayerKey = (gameMode === 'vs-player' && state.active === 'p2') ? 'p2' : 'p1';
     const topPlayerKey = getOpponent(bottomPlayerKey);
     const bottomP = state[bottomPlayerKey];
     const topP = state[topPlayerKey];
@@ -387,8 +501,12 @@ const CARD_POOL = {
     document.getElementById('bottom-player-name').textContent = bottomP.name;
     document.getElementById('top-player-name').textContent = topP.name;
     document.getElementById('bottom-player-avatar').textContent = bottomPlayerKey === 'p1' ? '😎' : '🤓';
-    document.getElementById('top-player-avatar').textContent = topPlayerKey === 'p1' ? '😎' : (gameMode === 'vs-bot' ? '🤖' : '🤓');
+    document.getElementById('top-player-avatar').textContent = topPlayerKey === 'p1' ? '😎' : ((gameMode === 'vs-bot' || gameMode === 'event') ? '🤖' : '🤓');
     
+    document.getElementById('edit-bottom-player-name-btn').onclick = () => changePlayerName(bottomPlayerKey);
+    document.getElementById('edit-top-player-name-btn').onclick = () => changePlayerName(topPlayerKey);
+    document.getElementById('edit-top-player-name-btn').classList.toggle('hidden', gameMode === 'vs-bot' || gameMode === 'event');
+
     document.getElementById('bottom-player-health-bar').style.width = `${(Math.max(0, bottomP.pv) / MAX_PV) * 100}%`;
     document.getElementById('top-player-health-bar').style.width = `${(Math.max(0, topP.pv) / MAX_PV) * 100}%`;
     
@@ -470,10 +588,25 @@ const CARD_POOL = {
   }
 
   // ----- Tela de Vitória -----
+<<<<<<< HEAD
+  function showVictoryScreen(winnerName, subtitle = '') {
+      const victoryScreen = document.getElementById('victory-screen');
+      const winnerText = document.getElementById('winner-name-text');
+      const subtitleText = document.getElementById('victory-subtitle');
+      
+      winnerText.textContent = `${winnerName} Venceu!`;
+      if (subtitle) {
+          subtitleText.textContent = subtitle;
+          subtitleText.classList.remove('hidden');
+      } else {
+          subtitleText.classList.add('hidden');
+      }
+=======
   function showVictoryScreen(winnerName) {
       const victoryScreen = document.getElementById('victory-screen');
       const winnerText = document.getElementById('winner-name-text');
       winnerText.textContent = `${winnerName} Venceu!`;
+>>>>>>> df730a3fbcc960b9726ae91e7b4ad0d2a9c9fec6
       victoryScreen.classList.remove('hidden');
   }
   
@@ -522,6 +655,15 @@ const CARD_POOL = {
               return;
           }
       }
+      
+      // Limite de 1 para a carta do evento no baralho
+      if (card.id === 'crupiesombrio') {
+          const count = currentDeck.filter(c => c.id === 'crupiesombrio').length;
+          if (count >= 1) {
+              alert('Você só pode ter 1 cópia do Crupie Sombrio no seu baralho.');
+              return;
+          }
+      }
 
       currentDeck.push(card);
       updateDeckBuilderUI();
@@ -543,23 +685,17 @@ const CARD_POOL = {
     const allCards = Object.values(CARD_POOL);
 
     const filteredCards = allCards.filter(card => {
-        // Filtro de Raridade
-        if (deckBuilderFilters.rarity !== 'all' && card.type !== deckBuilderFilters.rarity) {
+        // Lógica para carta bloqueada
+        if (card.id === 'crupiesombrio' && !isCrupieSombrioUnlocked && gameMode !== 'event') {
             return false;
         }
-        // Filtro de Categoria
-        if (deckBuilderFilters.category !== 'all' && card.category !== deckBuilderFilters.category) {
-            return false;
-        }
-        // Filtro de Custo
+
+        if (deckBuilderFilters.rarity !== 'all' && card.type !== deckBuilderFilters.rarity) return false;
+        if (deckBuilderFilters.category !== 'all' && card.category !== deckBuilderFilters.category) return false;
         if (deckBuilderFilters.cost !== 'all') {
             const cost = deckBuilderFilters.cost;
-            if (cost === '5+' && card.cost < 5) {
-                return false;
-            }
-            if (cost !== '5+' && card.cost != cost) {
-                return false;
-            }
+            if (cost === '5+' && card.cost < 5) return false;
+            if (cost !== '5+' && card.cost != cost) return false;
         }
         return true;
     });
@@ -583,19 +719,63 @@ const CARD_POOL = {
   }
 
   function initializeDeckBuilder() {
-      document.getElementById('deck-builder-title').textContent = `Monte seu Baralho - ${state[currentDeckBuilderFor].name}`;
+      let titleName = '';
+      if (gameMode === 'event') {
+          titleName = state.p1.name;
+      } else {
+          titleName = state[currentDeckBuilderFor].name;
+      }
+      document.getElementById('deck-builder-title').textContent = `Monte o Baralho - ${titleName}`;
       document.getElementById('deck-size-label').textContent = DECK_SIZE;
       
       renderFilteredCardPool();
       updateDeckBuilderUI();
   }
+  
+  // ----- Lógica do Evento -----
+  function handleEventEnd(playerWon) {
+    if (playerWon) {
+        eventState.stage++;
+        if (eventState.stage >= BOT_DIFFICULTIES.length) {
+            // Venceu o evento
+            localStorage.setItem('hilo_shadow_event_complete', 'true');
+            isCrupieSombrioUnlocked = true;
+            setTimeout(() => showVictoryScreen('Você', 'EVENTO SOMBRIO CONCLUÍDO! A carta Crupie Sombrio foi desbloqueada.'), 500);
+            eventState = { isActive: false, stage: 0 };
+        } else {
+            // Passou para o próximo estágio
+            alert(`Você venceu! Próximo desafio: Bot ${BOT_DIFFICULTIES[eventState.stage]}`);
+            startEventMatch();
+        }
+    } else {
+        // Perdeu o evento
+        setTimeout(() => showVictoryScreen(`Bot ${BOT_DIFFICULTIES[eventState.stage]}`, 'DESAFIO FALHOU! Tente novamente.'), 500);
+        eventState = { isActive: false, stage: 0 };
+    }
+  }
+
+  function startEventMatch() {
+    player1CustomDeck = [];
+    document.querySelector('.game-container').classList.add('hidden');
+    document.querySelector('#victory-screen').classList.add('hidden');
+    document.querySelector('#deck-builder-screen').classList.remove('hidden');
+
+    gameMode = 'event';
+    state = { p1: { name: 'Desafiante' }, p2: { name: `Bot ${BOT_DIFFICULTIES[eventState.stage]}` } };
+    initializeDeckBuilder();
+  }
+
 
   // ----- Início do Jogo -----
   document.addEventListener('DOMContentLoaded', () => {
+    isCrupieSombrioUnlocked = localStorage.getItem('hilo_shadow_event_complete') === 'true';
+
     const gameModeSelectionScreen = document.getElementById('game-mode-selection');
+    const playerNameScreen = document.getElementById('player-name-screen');
     const deckBuilderScreen = document.getElementById('deck-builder-screen');
     const gameContainer = document.querySelector('.game-container');
     const cardImageModal = document.getElementById('card-image-modal');
+    const eventIntroScreen = document.getElementById('event-intro-screen');
 
     document.getElementById('vs-bot-btn').onclick = () => {
         gameMode = 'vs-bot';
@@ -607,11 +787,31 @@ const CARD_POOL = {
     };
     
     document.getElementById('vs-player-btn').onclick = () => {
+        gameModeSelectionScreen.classList.add('hidden');
+        playerNameScreen.classList.remove('hidden');
+    };
+
+    document.getElementById('event-btn').onclick = () => {
+        gameModeSelectionScreen.classList.add('hidden');
+        eventIntroScreen.classList.remove('hidden');
+    };
+
+    document.getElementById('start-event-btn').onclick = () => {
+        eventIntroScreen.classList.add('hidden');
+        eventState = { isActive: true, stage: 0 };
+        startEventMatch();
+    };
+
+    document.getElementById('confirm-names-btn').onclick = () => {
+        const p1Name = document.getElementById('p1-name-input').value.trim() || 'Jogador 1';
+        const p2Name = document.getElementById('p2-name-input').value.trim() || 'Jogador 2';
+
         gameMode = 'vs-player';
         currentDeckBuilderFor = 'p1';
-        gameModeSelectionScreen.classList.add('hidden');
+        state = { p1: { name: p1Name }, p2: { name: p2Name } };
+
+        playerNameScreen.classList.add('hidden');
         deckBuilderScreen.classList.remove('hidden');
-        state = { p1: { name: 'Jogador 1' }, p2: { name: 'Jogador 2' } };
         initializeDeckBuilder();
     };
 
@@ -619,11 +819,23 @@ const CARD_POOL = {
     document.getElementById('undo-move').onclick = undoMove;
   
     document.getElementById('start-game-btn').onclick = () => {
+        if (gameMode === 'event') {
+            const hasCrupie = player1CustomDeck.some(card => card.id === 'crupiesombrio');
+            if (!hasCrupie) {
+                alert('Você deve incluir a carta "Crupie Sombrio" no seu baralho para iniciar o evento!');
+                return;
+            }
+            deckBuilderScreen.classList.add('hidden');
+            gameContainer.classList.remove('hidden');
+            newGame();
+            return;
+        }
+
         const currentDeck = (currentDeckBuilderFor === 'p1') ? player1CustomDeck : player2CustomDeck;
         if (currentDeck.length !== DECK_SIZE) return;
         if (gameMode === 'vs-player' && currentDeckBuilderFor === 'p1') {
             currentDeckBuilderFor = 'p2';
-            alert('Baralho do Jogador 1 confirmado! Agora é a vez do Jogador 2.');
+            alert(`Baralho de ${state.p1.name} confirmado! Agora é a vez de ${state.p2.name}.`);
             initializeDeckBuilder();
         } else {
             deckBuilderScreen.classList.add('hidden');

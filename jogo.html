@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Jogo de Cartas - Batalha de Decks</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <img id="logo-top-right" src="hilocards.png" alt="Logo Hilo Cards">
+  <div id="copyright-bottom-right">hilo.inc</div>
+
+  <div id="game-mode-selection">
+      <h1>Batalha de Decks</h1>
+      <p>Escolha o modo de jogo:</p>
+      <div class="mode-buttons">
+          <button id="vs-bot-btn">Jogador vs. Bot</button>
+          <button id="vs-player-btn">Jogador vs. Jogador</button>
+          <button id="event-btn">Evento</button>
+      </div>
+  </div>
+
+  <div id="event-intro-screen" class="hidden">
+    <div class="event-title-container">
+        <h1>Evento Sombrio</h1>
+        <img src="sombrio.png" alt="Ícone Sombrio" class="event-icon">
+    </div>
+    <p>Enfrente três desafios crescentes para desbloquear um poder oculto.</p>
+    <div class="event-challenges">
+        <div class="challenge-box">Vs. Bot Médio</div>
+        <div class="challenge-box">Vs. Bot Difícil</div>
+        <div class="challenge-box">Vs. Bot Impossível</div>
+    </div>
+    <p>Você deve incluir a carta <strong>Crupie Sombrio</strong> em seu baralho para participar.</p>
+    <button id="start-event-btn">Iniciar Desafio</button>
+  </div>
+
+  <div id="player-name-screen" class="hidden">
+    <h1>Insira os Nomes dos Jogadores</h1>
+    <div class="name-input-group">
+        <label for="p1-name-input">Nome do Jogador 1:</label>
+        <input type="text" id="p1-name-input" placeholder="Jogador 1" maxlength="15">
+    </div>
+    <div class="name-input-group">
+        <label for="p2-name-input">Nome do Jogador 2:</label>
+        <input type="text" id="p2-name-input" placeholder="Jogador 2" maxlength="15">
+    </div>
+    <button id="confirm-names-btn">Confirmar Nomes</button>
+  </div>
+
+  <div id="deck-builder-screen" class="hidden">
+    <h1 id="deck-builder-title">Monte seu Baralho</h1>
+    <p>Escolha <span id="deck-size-label">20</span> cartas para começar.</p>
+    <div class="deck-builder-main">
+        <div class="card-pool-container">
+            <div class="card-pool-header">
+              <h2>Cartas Disponíveis</h2>
+              <div class="card-pool-filters">
+                  <select id="filter-rarity">
+                      <option value="all">Toda Raridade</option>
+                      <option value="basic">Básica</option>
+                      <option value="rare">Rara</option>
+                      <option value="legend">Lendária</option>
+                      <option value="joker">Joker</option>
+                      <option value="sombria">Sombria</option>
+                  </select>
+                  <select id="filter-category">
+                      <option value="all">Toda Classe</option>
+                      <option value="creature">Criatura</option>
+                      <option value="effect">Efeito</option>
+                      <option value="joker">Joker</option>
+                  </select>
+                  <select id="filter-cost">
+                      <option value="all">Todo Custo</option>
+                      <option value="0">Custo 0</option>
+                      <option value="1">Custo 1</option>
+                      <option value="2">Custo 2</option>
+                      <option value="3">Custo 3</option>
+                      <option value="4">Custo 4</option>
+                      <option value="5+">Custo 5+</option>
+                  </select>
+              </div>
+            </div>
+            <div id="card-pool"></div>
+        </div>
+        <div class="current-deck-container">
+            <h2>Seu Baralho (<span id="deck-counter">0/20</span>)</h2>
+            <div id="current-deck-list"></div>
+            <button id="start-game-btn" disabled>Confirmar Baralho</button>
+        </div>
+    </div>
+  </div>
+
+  <div class="game-container hidden">
+    <div class="top-bar">
+      <div class="enemy-area">
+        <div class="player-stats">
+          <div class="player-name-line">
+            <div class="player-name" id="top-player-name">Inimigo</div>
+            <button class="edit-name-btn" id="edit-top-player-name-btn">✏️</button>
+          </div>
+          <div class="pv-line">
+            <div class="pv" id="top-player-pv">40</div>
+            <img id="top-player-bleed-icon" src="sangue.png" class="status-icon hidden" alt="Ícone de Sangramento" title="Sangramento: Causa 1 de dano no início do turno.">
+          </div>
+          <div class="health-bar-container">
+            <div id="top-player-health-bar" class="health-bar"></div>
+          </div>
+          <div class="resources">
+            <div class="resource-item">Baralho: <span id="top-player-deck">20</span></div>
+            <div class="resource-item">Descarte: <span id="top-player-discard">0</span></div>
+            <div class="resource-item">Energia: <span id="top-player-energy">0</span></div>
+          </div>
+        </div>
+        <div id="top-player-avatar" class="avatar">🤖</div>
+      </div>
+
+      <div class="center-area">
+        <div id="turn-indicator">Turno 1</div>
+        <div class="turn-controls">
+          <button id="undo-move" disabled>↩️ Retornar Jogada</button>
+          <button id="end-turn">Terminar Turno</button>
+        </div>
+      </div>
+
+      <div class="player-area">
+        <div id="bottom-player-avatar" class="avatar">😎</div>
+        <div class="player-stats">
+          <div class="player-name-line">
+            <div class="player-name" id="bottom-player-name">Jogador</div>
+            <button class="edit-name-btn" id="edit-bottom-player-name-btn">✏️</button>
+          </div>
+           <div class="pv-line">
+            <div class="pv" id="bottom-player-pv">40</div>
+             <img id="bottom-player-bleed-icon" src="sangue.png" class="status-icon hidden" alt="Ícone de Sangramento" title="Sangramento: Causa 1 de dano no início do turno.">
+          </div>
+           <div class="health-bar-container">
+            <div id="bottom-player-health-bar" class="health-bar"></div>
+          </div>
+          <div class="resources">
+            <div class="resource-item">Baralho: <span id="bottom-player-deck">20</span></div>
+            <div class="resource-item">Descarte: <span id="bottom-player-discard">0</span></div>
+            <div class="energy-container">
+                <img src="energia.png" class="energy-title-icon" alt="Ícone de Energia">
+                <div class="energy-bar" id="bottom-player-energy"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="board-area">
+      <div class="played-cards-area">
+        <div class="played-cards-title">Cartas Jogadas:</div>
+        <div class="played-cards" id="played-cards"></div>
+      </div>
+      
+      <div class="log-area" id="log-area"></div>
+      
+      <div class="hand-area-container">
+        <div class="hand-title-area">Sua Mão (<span id="hand-counter">0/8</span>)</div>
+        <div class="hand" id="hand"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="turn-transition-screen" class="hidden">
+      <div class="transition-content">
+          <h2 id="transition-title">Passe para o próximo jogador</h2>
+          <p id="transition-text">Clique no botão quando estiver pronto.</p>
+          <button id="transition-continue-btn">Iniciar Turno</button>
+      </div>
+  </div>
+  
+  <div id="card-image-modal" class="hidden">
+      <div class="modal-content">
+          <button id="modal-close-btn">&times;</button>
+          <img id="modal-card-image" src="" alt="Imagem da Carta Ampliada" />
+      </div>
+  </div>
+
+  <div id="victory-screen" class="hidden">
+      <div class="victory-content">
+          <h1 id="winner-name-text">Você Venceu!</h1>
+          <p id="victory-subtitle" class="hidden"></p>
+          <button id="play-again-btn">Jogar Novamente</button>
+      </div>
+  </div>
+
+<script src="script.js"></script>
+</body>
+</html>
