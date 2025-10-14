@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Jogo de Cartas - Batalha de Decks</title>
+  <title>Jogo de Cartas - Hilo Cards</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
@@ -14,8 +14,13 @@
   <img id="logo-top-right" src="hilocards.png" alt="Logo Hilo Cards">
   <div id="copyright-bottom-right">hilo.inc</div>
 
+  <div id="event-notification" class="hidden">
+      <button id="event-notification-close-btn">&times;</button>
+      <h2>EVENTO NOVO !</h2> <img src="evento1.png" alt="Notificação de Novo Evento">
+  </div>
+
   <div id="game-mode-selection">
-      <h1>Batalha de Decks</h1>
+      <h1>Hilo Cards</h1>
       <p>Escolha o modo de jogo:</p>
       <div class="mode-buttons">
           <button id="vs-bot-btn">Jogador vs. Bot</button>
@@ -188,6 +193,14 @@
           <h1 id="winner-name-text">Você Venceu!</h1>
           <p id="victory-subtitle" class="hidden"></p>
           <button id="play-again-btn">Jogar Novamente</button>
+      </div>
+  </div>
+
+  <div id="deck-choice-modal" class="hidden">
+      <div class="deck-choice-content">
+          <h2 id="deck-choice-title">Escolha uma carta para comprar</h2>
+          <div id="deck-choice-card-list"></div>
+          <button id="deck-choice-confirm-btn" disabled>Confirmar Escolha</button>
       </div>
   </div>
 

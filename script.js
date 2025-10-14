@@ -44,7 +44,7 @@ const CARD_POOL = {
         log(`${state[ctx.player].name} sente a energia da lua!`);
     }},
 
-    // Sombria (NOVA RARIDADE)
+    // Sombria
     crupiesombrio: {
         id: 'crupiesombrio', name: 'Crupie Sombrio', type: 'sombria', category: 'creature', cost: 4, 
         desc: 'Rouba TODA a energia do inimigo e cura o dobro do valor roubado em PV.',
@@ -60,6 +60,49 @@ const CARD_POOL = {
             } else {
                 log('O Crupie Sombrio não encontrou energia para roubar.');
             }
+            updateUI();
+        }
+    },
+    pactosombrio: {
+        id: 'pactosombrio', name: 'Pacto Sombrio', type: 'sombria', category: 'effect', cost: 5,
+        desc: 'Perca 7 PV. Oponente descarta 2 cartas. Escolha 1 carta do seu baralho e compre-a.',
+        art: '💀', image: 'pactosombrio.png',
+        play: async ({ ctx }) => { // Função agora é assíncrona
+            const player = state[ctx.player];
+            const opponent = state[ctx.opponent];
+
+            // 1. Perder 7 PV
+            log(`${player.name} fez um pacto e perdeu 7 PV.`);
+            player.pv -= 7;
+            const playerAvatarId = (gameMode === 'vs-player' && ctx.player === state.active) ? 'bottom-player-avatar' : (ctx.player === 'p1' ? 'bottom-player-avatar' : 'top-player-avatar');
+            showDamageIndicator(7, document.getElementById(playerAvatarId));
+            if (checkWin()) return;
+
+            // 2. Oponente descarta 2 cartas
+            for (let i = 0; i < 2; i++) {
+                if (opponent.hand.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * opponent.hand.length);
+                    const discardedCard = opponent.hand.splice(randomIndex, 1)[0];
+                    opponent.discard.push(discardedCard);
+                    log(`${opponent.name} teve a carta ${discardedCard.name} descartada aleatoriamente!`);
+                } else {
+                    log(`${opponent.name} não tinha cartas para descartar.`);
+                    break;
+                }
+            }
+
+            // 3. Escolher e Comprar 1 carta
+            if (player.deck.length > 0) {
+                log(`${player.name} está escolhendo uma carta do baralho...`);
+                updateUI();
+                const chosenCard = await promptCardChoiceFromDeck(ctx.player);
+                if (chosenCard) {
+                    log(`${player.name} escolheu e comprou ${chosenCard.name}!`);
+                }
+            } else {
+                log("Não há cartas no baralho para escolher.");
+            }
+            
             updateUI();
         }
     },
@@ -162,6 +205,7 @@ const CARD_POOL = {
   }
   
   function log(msg) {
+    if (!state) return;
     state.log.unshift(`[T${state.turn}] ${msg}`);
     if(state.log.length > 50) state.log.pop();
     updateUI();
@@ -280,9 +324,13 @@ const CARD_POOL = {
       const playedCard = p.hand.splice(handIdx, 1)[0];
       log(`${p.name} jogou ${card.name}.`);
       const context = { ctx: { player: state.active, opponent: getOpponent(state.active) } };
-      await card.play(context);
       state.playedCards.push(playedCard);
       document.getElementById('undo-move').disabled = false;
+      
+      // A carta é jogada e seu efeito é resolvido aqui
+      await card.play(context);
+      
+      // A UI é atualizada após a conclusão do efeito
       updateUI();
   }
   
@@ -295,8 +343,8 @@ const CARD_POOL = {
         const playedCard = p.hand.splice(handIdx, 1)[0];
         log(`Inimigo jogou ${card.name}.`);
         const context = { ctx: { player: 'p2', opponent: 'p1' } };
-        await card.play(context);
         state.playedCards.push(playedCard);
+        await card.play(context);
         updateUI();
     }
 
@@ -364,7 +412,7 @@ const CARD_POOL = {
     }
     showDamageIndicator(finalDamage, document.getElementById(targetAvatarId));
     updateUI();
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 300));
     checkWin();
     return defender.pv <= 0;
   }
@@ -448,9 +496,10 @@ const CARD_POOL = {
     const el = document.createElement('div');
     el.className = 'card';
     if(isSmall) el.classList.add('small-card');
+    el.dataset.id = card.id;
     el.dataset.type = card.type;
 
-    if (card.id === 'crupiesombrio') {
+    if (card.type === 'sombria') {
         const sideIconContainer = document.createElement('div');
         sideIconContainer.className = 'card-side-icon';
         const sideIconImg = document.createElement('img');
@@ -560,7 +609,7 @@ const CARD_POOL = {
       setTimeout(() => indicator.remove(), 1500);
   }
 
-  // ----- Funções do Modal de Imagem -----
+  // ----- Funções de Modais -----
   function showCardImageModal(card) {
       if (!card.image) return;
       const modal = document.getElementById('card-image-modal');
@@ -636,11 +685,11 @@ const CARD_POOL = {
           }
       }
       
-      // Limite de 1 para a carta do evento no baralho
-      if (card.id === 'crupiesombrio') {
-          const count = currentDeck.filter(c => c.id === 'crupiesombrio').length;
+      // Limite de 1 para cartas Sombrias no baralho
+      if (card.type === 'sombria') {
+          const count = currentDeck.filter(c => c.id === card.id).length;
           if (count >= 1) {
-              alert('Você só pode ter 1 cópia do Crupie Sombrio no seu baralho.');
+              alert(`Você só pode ter 1 cópia de ${card.name} no seu baralho.`);
               return;
           }
       }
@@ -665,8 +714,7 @@ const CARD_POOL = {
     const allCards = Object.values(CARD_POOL);
 
     const filteredCards = allCards.filter(card => {
-        // Lógica para carta bloqueada
-        if (card.id === 'crupiesombrio' && !isCrupieSombrioUnlocked && gameMode !== 'event') {
+        if ((card.id === 'crupiesombrio' || card.id === 'pactosombrio') && !isCrupieSombrioUnlocked && gameMode !== 'event') {
             return false;
         }
 
@@ -711,6 +759,63 @@ const CARD_POOL = {
       renderFilteredCardPool();
       updateDeckBuilderUI();
   }
+
+  // ----- LÓGICA: Escolha de Carta -----
+  function promptCardChoiceFromDeck(playerKey) {
+    return new Promise(resolve => {
+        const player = state[playerKey];
+        const modal = document.getElementById('deck-choice-modal');
+        const cardList = document.getElementById('deck-choice-card-list');
+        const confirmBtn = document.getElementById('deck-choice-confirm-btn');
+
+        cardList.innerHTML = '';
+        let selectedCardEl = null;
+        let selectedCardIndex = -1;
+
+        player.deck.forEach((card, index) => {
+            const cardEl = renderCard(card);
+            cardEl.dataset.index = index;
+            cardEl.onclick = () => {
+                if (selectedCardEl) {
+                    selectedCardEl.classList.remove('selected');
+                }
+                selectedCardEl = cardEl;
+                selectedCardEl.classList.add('selected');
+                selectedCardIndex = parseInt(cardEl.dataset.index);
+                confirmBtn.disabled = false;
+            };
+            cardList.appendChild(cardEl);
+        });
+
+        confirmBtn.onclick = () => {
+            if (selectedCardIndex === -1) return;
+
+            // Remove a carta do baralho
+            const chosenCard = player.deck.splice(selectedCardIndex, 1)[0];
+            
+            // Adiciona a carta à mão
+            if (player.hand.length < MAX_HAND_SIZE) {
+                player.hand.push(chosenCard);
+            } else {
+                log('Mão cheia! A carta escolhida foi para o descarte.');
+                player.discard.push(chosenCard);
+            }
+            
+            // Reembaralha o restante do baralho
+            player.deck = shuffle(player.deck);
+
+            // Limpa e esconde o modal
+            modal.classList.add('hidden');
+            confirmBtn.disabled = true;
+            selectedCardEl = null;
+            selectedCardIndex = -1;
+
+            resolve(chosenCard); // Retorna a carta que foi escolhida
+        };
+
+        modal.classList.remove('hidden');
+    });
+  }
   
   // ----- Lógica do Evento -----
   function handleEventEnd(playerWon) {
@@ -720,7 +825,7 @@ const CARD_POOL = {
             // Venceu o evento
             localStorage.setItem('hilo_shadow_event_complete', 'true');
             isCrupieSombrioUnlocked = true;
-            setTimeout(() => showVictoryScreen('Você', 'EVENTO SOMBRIO CONCLUÍDO! A carta Crupie Sombrio foi desbloqueada.'), 500);
+            setTimeout(() => showVictoryScreen('Você', 'EVENTO SOMBRIO CONCLUÍDO! Cartas Sombrias foram desbloqueadas.'), 500);
             eventState = { isActive: false, stage: 0 };
         } else {
             // Passou para o próximo estágio
@@ -746,17 +851,28 @@ const CARD_POOL = {
   }
 
 
-  // ----- Início do Jogo -----
+  // ----- Início do Jogo e Event Listeners -----
   document.addEventListener('DOMContentLoaded', () => {
-    isCrupieSombrioUnlocked = localStorage.getItem('hilo_shadow_event_complete') === 'true';
-
+    // Variáveis Globais de Elementos
     const gameModeSelectionScreen = document.getElementById('game-mode-selection');
     const playerNameScreen = document.getElementById('player-name-screen');
     const deckBuilderScreen = document.getElementById('deck-builder-screen');
     const gameContainer = document.querySelector('.game-container');
     const cardImageModal = document.getElementById('card-image-modal');
     const eventIntroScreen = document.getElementById('event-intro-screen');
+    const eventNotification = document.getElementById('event-notification');
+    const closeNotificationBtn = document.getElementById('event-notification-close-btn');
 
+    // Lógica da Notificação de Evento no Início
+    isCrupieSombrioUnlocked = localStorage.getItem('hilo_shadow_event_complete') === 'true';
+    if (!isCrupieSombrioUnlocked) {
+        eventNotification.classList.remove('hidden');
+    }
+    closeNotificationBtn.onclick = () => {
+        eventNotification.classList.add('hidden');
+    };
+
+    // Listeners dos Botões de Modo de Jogo
     document.getElementById('vs-bot-btn').onclick = () => {
         gameMode = 'vs-bot';
         currentDeckBuilderFor = 'p1';
@@ -785,16 +901,15 @@ const CARD_POOL = {
     document.getElementById('confirm-names-btn').onclick = () => {
         const p1Name = document.getElementById('p1-name-input').value.trim() || 'Jogador 1';
         const p2Name = document.getElementById('p2-name-input').value.trim() || 'Jogador 2';
-
         gameMode = 'vs-player';
         currentDeckBuilderFor = 'p1';
         state = { p1: { name: p1Name }, p2: { name: p2Name } };
-
         playerNameScreen.classList.add('hidden');
         deckBuilderScreen.classList.remove('hidden');
         initializeDeckBuilder();
     };
 
+    // Listeners dos Controles do Jogo
     document.getElementById('end-turn').onclick = endTurn;
     document.getElementById('undo-move').onclick = undoMove;
   
@@ -805,14 +920,11 @@ const CARD_POOL = {
                 alert('Você deve incluir a carta "Crupie Sombrio" no seu baralho para iniciar o evento!');
                 return;
             }
-            deckBuilderScreen.classList.add('hidden');
-            gameContainer.classList.remove('hidden');
-            newGame();
-            return;
         }
 
         const currentDeck = (currentDeckBuilderFor === 'p1') ? player1CustomDeck : player2CustomDeck;
         if (currentDeck.length !== DECK_SIZE) return;
+
         if (gameMode === 'vs-player' && currentDeckBuilderFor === 'p1') {
             currentDeckBuilderFor = 'p2';
             alert(`Baralho de ${state.p1.name} confirmado! Agora é a vez de ${state.p2.name}.`);
@@ -824,18 +936,17 @@ const CARD_POOL = {
         }
     };
     
+    // Listeners dos Modais
     document.getElementById('modal-close-btn').onclick = hideCardImageModal;
     cardImageModal.onclick = (e) => {
-        if (e.target === cardImageModal) {
-            hideCardImageModal();
-        }
+        if (e.target === cardImageModal) hideCardImageModal();
     };
 
     document.getElementById('play-again-btn').onclick = () => {
         window.location.reload();
     };
 
-    // Event Listeners para os filtros
+    // Listeners para os filtros do Deck Builder
     document.getElementById('filter-rarity').addEventListener('change', (e) => {
       deckBuilderFilters.rarity = e.target.value;
       renderFilteredCardPool();
