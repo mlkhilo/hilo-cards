@@ -414,7 +414,6 @@ const CARD_POOL = {
   }
   
   function checkWin() {
-<<<<<<< HEAD
     if (state.gameEnded) return true;
     if (state.p1.pv <= 0 || state.p2.pv <= 0) {
         state.gameEnded = true;
@@ -429,18 +428,6 @@ const CARD_POOL = {
         return true;
     }
     return false;
-=======
-      if (state.gameEnded) return true;
-      if (state.p1.pv <= 0 || state.p2.pv <= 0) {
-          state.gameEnded = true;
-          const winner = state.p1.pv > 0 ? state.p1.name : state.p2.name;
-          setTimeout(() => {
-              showVictoryScreen(winner);
-          }, 1000);
-          return true;
-      }
-      return false;
->>>>>>> df730a3fbcc960b9726ae91e7b4ad0d2a9c9fec6
   }
   
   function changePlayerName(playerKey) {
@@ -588,7 +575,6 @@ const CARD_POOL = {
   }
 
   // ----- Tela de Vitória -----
-<<<<<<< HEAD
   function showVictoryScreen(winnerName, subtitle = '') {
       const victoryScreen = document.getElementById('victory-screen');
       const winnerText = document.getElementById('winner-name-text');
@@ -601,12 +587,6 @@ const CARD_POOL = {
       } else {
           subtitleText.classList.add('hidden');
       }
-=======
-  function showVictoryScreen(winnerName) {
-      const victoryScreen = document.getElementById('victory-screen');
-      const winnerText = document.getElementById('winner-name-text');
-      winnerText.textContent = `${winnerName} Venceu!`;
->>>>>>> df730a3fbcc960b9726ae91e7b4ad0d2a9c9fec6
       victoryScreen.classList.remove('hidden');
   }
   
