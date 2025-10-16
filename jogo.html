@@ -11,7 +11,10 @@
 </head>
 <body>
 
-  <img id="logo-top-right" src="hilocards.png" alt="Logo Hilo Cards">
+  <div id="profile-container" class="hidden">
+      <span id="profile-name">Jogador</span>
+      <img id="profile-avatar" src="incmago.png" alt="Avatar do Jogador">
+  </div>
   <div id="copyright-bottom-right">hilo.inc</div>
 
   <div id="event-notification" class="hidden">
@@ -31,24 +34,55 @@
 
   <div id="event-intro-screen" class="hidden">
     <div class="event-title-container">
-        <h1>Evento Sombrio</h1>
+        <h1>Evento Aposta Sombria</h1>
         <img src="sombrio.png" alt="Ícone Sombrio" class="event-icon">
     </div>
     <p>Enfrente três desafios crescentes para desbloquear um poder oculto.</p>
     <div class="event-challenges">
-        <div class="challenge-box">Vs. Bot Médio</div>
-        <div class="challenge-box">Vs. Bot Difícil</div>
-        <div class="challenge-box">Vs. Bot Impossível</div>
+        <div class="challenge-box">Flutuação de Energia</div>
+        <div class="challenge-box">Pacto de Sangue</div>
+        <div class="challenge-box">A Colheita Sombria</div>
     </div>
     <p>Você deve incluir a carta <strong>Crupie Sombrio</strong> em seu baralho para participar.</p>
     <button id="start-event-btn">Iniciar Desafio</button>
+  </div>
+  
+  <div id="multiplayer-options-modal" class="hidden">
+      <div class="multiplayer-options-content">
+          <h2>Modificadores de Jogo</h2>
+          <p>Escolha regras especiais para a partida de Jogador vs. Jogador.</p>
+          <div class="options-list">
+              <div class="option-item">
+                  <input type="checkbox" id="option-energy-flux" name="energyFlux">
+                  <label for="option-energy-flux">
+                      <strong>Flutuação de Energia</strong>
+                      <span>Uma moeda decide a energia ganha por turno (2 ou 4).</span>
+                  </label>
+              </div>
+              <div class="option-item">
+                  <input type="checkbox" id="option-blood-pact" name="bloodPact">
+                  <label for="option-blood-pact">
+                      <strong>Pacto de Sangue</strong>
+                      <span>Sacrifique PV no início do turno por vantagens.</span>
+                  </label>
+              </div>
+              <div class="option-item">
+                  <input type="checkbox" id="option-dark-harvest" name="darkHarvest">
+                  <label for="option-dark-harvest">
+                      <strong>A Colheita Sombria</strong>
+                      <span>A arena causa dano progressivo a cada turno (a partir do turno 4).</span>
+                  </label>
+              </div>
+          </div>
+          <button id="confirm-multiplayer-options-btn">Continuar</button>
+      </div>
   </div>
 
   <div id="player-name-screen" class="hidden">
     <h1>Insira os Nomes dos Jogadores</h1>
     <div class="name-input-group">
         <label for="p1-name-input">Nome do Jogador 1:</label>
-        <input type="text" id="p1-name-input" placeholder="Jogador 1" maxlength="15">
+        <input type="text" id="p1-name-input" placeholder="Jogador 1" maxlength="15" disabled>
     </div>
     <div class="name-input-group">
         <label for="p2-name-input">Nome do Jogador 2:</label>
@@ -106,7 +140,7 @@
         <div class="player-stats">
           <div class="player-name-line">
             <div class="player-name" id="top-player-name">Inimigo</div>
-            <button class="edit-name-btn" id="edit-top-player-name-btn">✏️</button>
+            <button class="edit-name-btn hidden" id="edit-top-player-name-btn">✏️</button>
           </div>
           <div class="pv-line">
             <div class="pv" id="top-player-pv">40</div>
@@ -121,7 +155,7 @@
             <div class="resource-item">Energia: <span id="top-player-energy">0</span></div>
           </div>
         </div>
-        <div id="top-player-avatar" class="avatar">🤖</div>
+        <img id="top-player-avatar" class="avatar" src="bot.png" alt="Avatar Inimigo">
       </div>
 
       <div class="center-area">
@@ -133,12 +167,11 @@
       </div>
 
       <div class="player-area">
-        <div id="bottom-player-avatar" class="avatar">😎</div>
+        <img id="bottom-player-avatar" class="avatar" src="incmago.png" alt="Avatar Jogador">
         <div class="player-stats">
           <div class="player-name-line">
             <div class="player-name" id="bottom-player-name">Jogador</div>
-            <button class="edit-name-btn" id="edit-bottom-player-name-btn">✏️</button>
-          </div>
+            </div>
            <div class="pv-line">
             <div class="pv" id="bottom-player-pv">40</div>
              <img id="bottom-player-bleed-icon" src="sangue.png" class="status-icon hidden" alt="Ícone de Sangramento" title="Sangramento: Causa 1 de dano no início do turno.">
@@ -202,6 +235,41 @@
           <div id="deck-choice-card-list"></div>
           <button id="deck-choice-confirm-btn" disabled>Confirmar Escolha</button>
       </div>
+  </div>
+
+  <div id="avatar-selection-modal" class="hidden">
+    <div class="avatar-modal-content">
+        <button id="avatar-modal-close-btn">&times;</button>
+        <h2>Escolha seu Ícone</h2>
+        <div id="avatar-grid">
+            </div>
+    </div>
+  </div>
+
+  <div id="coin-flip-modal" class="hidden">
+    <div class="coin-flip-content">
+        <h2 id="coin-flip-title">A Moeda Sombria é jogada...</h2>
+        <div id="coin-spinner">
+            <img src="moedacara.png" alt="Moeda girando">
+        </div>
+        <div id="coin-result" class="hidden">
+            <img id="coin-result-img" src="" alt="Resultado da moeda">
+            <p id="coin-result-text"></p>
+        </div>
+    </div>
+  </div>
+
+  <div id="pacto-modal" class="hidden">
+    <div class="pacto-modal-content">
+        <h2>Pacto de Sangue</h2>
+        <p>O poder exige um sacrifício. Escolha sua vantagem.</p>
+        <div class="pacto-options">
+            <button id="pacto-sac-3hp">Comprar 1 Carta <span>(Sacrificar 3 PV)</span></button>
+            <button id="pacto-sac-5hp">Ganhar 2 Energia <span>(Sacrificar 5 PV)</span></button>
+            <button id="pacto-sac-2hp">Próxima Carta -1 Custo <span>(Sacrificar 2 PV)</span></button>
+            <button id="pacto-rejeitar">Rejeitar Pacto</button>
+        </div>
+    </div>
   </div>
 
 <script src="script.js"></script>
