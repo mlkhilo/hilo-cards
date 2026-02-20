@@ -1,12 +1,42 @@
 // ----- Constantes Globais do Jogo -----
 const MAX_PV = 40;
 const DECK_SIZE = 20;
-const MAX_HAND_SIZE = 8;
+const MAX_HAND_SIZE = 12; // Modificado para 12 para permitir o efeito de rolagem de cartas
 const BOT_DIFFICULTIES = ['Médio', 'Difícil', 'A Colheita Sombria'];
 const BASE_AVATAR_POOL = [
     'incmago.png', 'incfeiticeira.png', 'incdragao.png', 'incjoker.png',
     'incespdiv.png', 'inccac.png', 'incgoblin.png', 'incmartelo.png'
 ];
+
+// Lore dos Eventos para a Tela de Transição
+const EVENT_LORE = [
+    {
+        title: "I. Flutuação de Energia",
+        desc: "A magia desta arena é instável. No início do turno de cada jogador, uma 'Moeda Sombria' é jogada.\nCara: +1 de energia (total 4).\nCoroa: -1 de energia (total 2)."
+    },
+    {
+        title: "II. Pacto de Sangue",
+        desc: "O poder exige um sacrifício. No início do seu turno, você pode selar um Pacto de Sangue para obter uma vantagem imediata. Escolha com sabedoria, pois cada gota de vida conta."
+    },
+    {
+        title: "III. A Colheita Sombria",
+        desc: "O ritual sombrio está completo. A arena anseia por um sacrifício final. A cada turno a partir do 4º, a escuridão exige um tributo de sangue progressivo. Termine o duelo antes que seja colhido."
+    }
+];
+
+// ----- Áudios e Efeitos Sonoros -----
+const sfxHover = new Audio('som_hover.mp3');
+const sfxJogar = new Audio('som_jogar.mp3');
+// Volumes para não incomodar
+sfxHover.volume = 0.3;
+sfxJogar.volume = 0.5;
+
+function playSoundSafe(audioObj) {
+    audioObj.currentTime = 0;
+    // Tenta tocar o áudio. O catch ignora erros silenciosamente caso o navegador 
+    // bloqueie o áudio antes da primeira interação do usuário.
+    audioObj.play().catch(e => { }); 
+}
 
 // ----- Definição de Cartas -----
 const CARD_POOL = {
@@ -174,6 +204,31 @@ function getOpponent(playerKey) {
     return playerKey === 'p1' ? 'p2' : 'p1';
 }
 
+// Função para gerar o Deck da IA dependendo do Evento
+function buildEventDeck(stage) {
+    const deck = [];
+    const add = (id, n) => { for(let i=0; i<n; i++) deck.push(CARD_POOL[id]) };
+    
+    if (stage === 0) { 
+        // Evento 0 - Moeda: Focado em variação de energia
+        add('espadachim', 3); add('escudo', 2); add('mago', 2); add('arqueiro', 2);
+        add('cacador', 2); add('martelo', 2); add('pocao', 2); add('crupiesombrio', 1);
+        add('goblin', 2); add('jokerBlue', 1); add('jokerGreen', 1);
+    } else if (stage === 1) { 
+        // Evento 1 - Pacto de Sangue: Focado em curar a vida que ele sacrifica + Pacto Sombrio
+        add('mago', 3); add('barreira', 2); add('pocaoM', 2); add('feiticeira', 2);
+        add('cavaleiro', 2); add('cacador', 2); add('crupiesombrio', 1); add('pactosombrio', 1);
+        add('lamina', 2); add('jokerRed', 1); add('tempestade', 2);
+    } else { 
+        // Evento 2 - Colheita Sombria: Deck agressivo para ganhar antes de morrer para arena
+        add('goblin', 4); add('lamina', 2); add('dragao', 1); add('mago', 3);
+        add('arqueiro', 3); add('crupiesombrio', 1); add('pactosombrio', 1); add('espadaDivina', 1);
+        add('cacador', 2); add('tempestade', 2);
+    }
+    
+    return deck.slice(0, 20); // Garante as 20 cartas
+}
+
 function newGame() {
     let p1Name = userProfile.name;
     let p2Name = 'Inimigo';
@@ -185,6 +240,8 @@ function newGame() {
     } else if (gameMode === 'event') {
         p1Name = 'Desafiante';
         p2Name = `Bot ${BOT_DIFFICULTIES[eventState.stage]}`;
+        // Associa o deck criado especialmente para aquele nível do evento
+        p2Deck = shuffle(buildEventDeck(eventState.stage));
     }
     
     state = {
@@ -269,43 +326,51 @@ async function startTurn(who) {
     }
 }
 
+// Moeda com Animação Fluída 3D
 function handleCoinFlip() {
     return new Promise(resolve => {
         const modal = document.getElementById('coin-flip-modal');
-        const spinner = document.getElementById('coin-spinner');
+        const flipper = document.getElementById('coin-flipper');
         const resultContainer = document.getElementById('coin-result');
         const resultImg = document.getElementById('coin-result-img');
         const resultText = document.getElementById('coin-result-text');
-        const spinnerImg = spinner.querySelector('img');
 
         modal.classList.remove('hidden');
-        spinner.classList.remove('hidden');
         resultContainer.classList.add('hidden');
+        
+        // Zera a transformação antes da nova rodada sem transição
+        flipper.style.transition = 'none';
+        flipper.style.transform = 'rotateY(0deg)';
 
-        let flips = 0;
-        const interval = setInterval(() => {
-            spinnerImg.src = flips % 2 === 0 ? 'moedacara.png' : 'moedacoroa.png';
-            flips++;
-        }, 100);
-
+        // Um pequeno tempo para o navegador registrar a quebra de transição
         setTimeout(() => {
-            clearInterval(interval);
             const isHeads = Math.random() < 0.5;
             const energyGain = isHeads ? 4 : 2;
             
-            resultImg.src = isHeads ? 'moedacara.png' : 'moedacoroa.png';
-            resultText.textContent = isHeads ? '+1 Energia (Total 4)' : '-1 Energia (Total 2)';
-            const coinResultText = isHeads ? 'CARA' : 'COROA';
-            log(`A Moeda Sombria deu ${coinResultText}.`);
+            // Vai girar no mínimo 5 vezes (1800 graus). 
+            // Se cair coroa, vira mais 180 graus para cair na parte de trás.
+            const spins = 5 * 360; 
+            const finalRotation = isHeads ? spins : spins + 180;
+            
+            // Aplica a transição CSS com cubic-bezier para desacelerar realisticamente
+            flipper.style.transition = 'transform 2.5s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            flipper.style.transform = `rotateY(${finalRotation}deg)`;
 
-            spinner.classList.add('hidden');
-            resultContainer.classList.remove('hidden');
-
+            // Aguarda a animação acabar (2.5s) + margem
             setTimeout(() => {
-                modal.classList.add('hidden');
-                resolve(energyGain);
-            }, 2500);
-        }, 2000);
+                resultImg.src = isHeads ? 'moedacara.png' : 'moedacoroa.png';
+                resultText.textContent = isHeads ? '+1 Energia (Total 4)' : '-1 Energia (Total 2)';
+                const coinResultText = isHeads ? 'CARA' : 'COROA';
+                log(`A Moeda Sombria deu ${coinResultText}.`);
+
+                resultContainer.classList.remove('hidden');
+
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    resolve(energyGain);
+                }, 2500);
+            }, 2600);
+        }, 50);
     });
 }
 
@@ -428,7 +493,21 @@ async function endTurn() {
         const harvestDamage = state.turn - 3;
         if (harvestDamage > 0) {
             const player = state[activePlayer];
+            
+            // Efeito na tela para reforçar a imersão da colheita
+            const flash = document.getElementById('dark-harvest-flash');
+            flash.classList.remove('hidden');
+            // Hack rápido para forçar reflow e resetar a animação
+            flash.style.animation = 'none';
+            flash.offsetHeight; /* trigger reflow */
+            flash.style.animation = null; 
+            
+            setTimeout(() => {
+                flash.classList.add('hidden');
+            }, 800); // 800ms é o tempo da animação
+
             await new Promise(resolve => setTimeout(resolve, 500)); // Pequeno delay
+            
             log(`A Colheita Sombria exige um tributo de ${player.name}, causando ${harvestDamage} de dano.`);
             player.pv -= harvestDamage;
             const avatarId = activePlayer === 'p1' ? 'bottom-player-avatar' : 'top-player-avatar';
@@ -503,6 +582,7 @@ async function playCard(handIdx) {
     state.playedCards.push(playedCard);
     document.getElementById('undo-move').disabled = false;
     
+    playSoundSafe(sfxJogar);
     await card.play(context);
     
     updateUI();
@@ -518,6 +598,8 @@ async function playCardAsBot(handIdx) {
     log(`Inimigo jogou ${card.name}.`);
     const context = { ctx: { player: 'p2', opponent: 'p1' } };
     state.playedCards.push(playedCard);
+    
+    playSoundSafe(sfxJogar);
     await card.play(context);
     updateUI();
 }
@@ -669,6 +751,11 @@ function renderCard(card, { isSmall = false } = {}) {
     el.dataset.id = card.id;
     el.dataset.type = card.type;
 
+    // Toca o som ao passar o mouse por cima
+    if (!isSmall) {
+        el.addEventListener('mouseenter', () => playSoundSafe(sfxHover));
+    }
+
     if (card.type === 'sombria') {
         const sideIconContainer = document.createElement('div');
         sideIconContainer.className = 'card-side-icon';
@@ -773,6 +860,21 @@ function updateUI() {
     
     document.getElementById('hand-counter').textContent = `${handPlayer.hand.length}/${MAX_HAND_SIZE}`;
     
+    // Controle das setas de scroll baseado na quantidade de cartas
+    setTimeout(() => {
+        const scrollLeftBtn = document.getElementById('scroll-left-btn');
+        const scrollRightBtn = document.getElementById('scroll-right-btn');
+        if (handPlayer.hand.length > 8) {
+            hand.classList.remove('center-cards');
+            scrollLeftBtn.classList.remove('hidden');
+            scrollRightBtn.classList.remove('hidden');
+        } else {
+            hand.classList.add('center-cards');
+            scrollLeftBtn.classList.add('hidden');
+            scrollRightBtn.classList.add('hidden');
+        }
+    }, 50);
+
     const playedCardsArea = document.getElementById('played-cards');
     playedCardsArea.innerHTML = '';
     state.playedCards.forEach(card => playedCardsArea.appendChild(renderCard(card, { isSmall: true })));
@@ -996,6 +1098,19 @@ function promptCardChoiceFromDeck(playerKey) {
 }
   
 // ----- Lógica do Evento -----
+
+// NOVO: Função para exibir a tela macabra com o lore do desafio atual
+function showEventTransition(stage) {
+    document.getElementById('event-next-stage-title').textContent = EVENT_LORE[stage].title;
+    document.getElementById('event-next-stage-desc').textContent = EVENT_LORE[stage].desc;
+    
+    document.querySelector('.game-container').classList.add('hidden');
+    document.querySelector('#victory-screen').classList.add('hidden');
+    document.querySelector('#event-intro-screen').classList.add('hidden');
+    
+    document.getElementById('event-transition-screen').classList.remove('hidden');
+}
+
 function handleEventEnd(playerWon) {
     if (playerWon) {
         eventState.stage++;
@@ -1012,8 +1127,8 @@ function handleEventEnd(playerWon) {
             setTimeout(() => showVictoryScreen('Você', 'EVENTO CONCLUÍDO! Cartas Sombrias e um novo ícone foram desbloqueados.'), 500);
             eventState = { isActive: false, stage: 0 };
         } else {
-            alert(`Você venceu! Próximo desafio: ${eventState.stage === 1 ? 'Pacto de Sangue' : 'A Colheita Sombria'}`);
-            startEventMatch();
+            // Em vez de Alert, mostra a tela de transição sombria para a próxima fase
+            showEventTransition(eventState.stage);
         }
     } else {
         setTimeout(() => showVictoryScreen(`Bot ${BOT_DIFFICULTIES[eventState.stage]}`, 'DESAFIO FALHOU! Tente novamente.'), 500);
@@ -1023,12 +1138,7 @@ function handleEventEnd(playerWon) {
 
 function startEventMatch() {
     const stage = eventState.stage;
-    if (stage === 1) { // Pacto de Sangue
-        alert('Pacto de Sangue:\n\n"O poder exige um sacrifício. No início do seu turno, você pode selar um Pacto de Sangue para obter uma vantagem imediata. Escolha com sabedoria, pois cada gota de vida conta."');
-    } else if (stage === 2) { // A Colheita Sombria
-        alert('A Colheita Sombria:\n\n"O ritual sombrio está completo. A arena agora anseia por um sacrifício final. A cada turno, a própria escuridão exige um tributo de sangue, e a dívida só aumenta. Termine o duelo, antes que ambos sejam colhidos."');
-    }
-
+    
     player1CustomDeck = [];
     document.querySelector('.game-container').classList.add('hidden');
     document.querySelector('#victory-screen').classList.add('hidden');
@@ -1060,7 +1170,40 @@ function populateAvatarGrid() {
     });
 }
 
+// Função para criar as cartas flutuantes no fundo da tela inicial
+function createAnimatedBackground() {
+    const bgContainer = document.getElementById('animated-bg');
+    if(!bgContainer) return;
+    
+    const suits = ['♠', '♥', '♦', '♣', '🃏'];
+    
+    for (let i = 0; i < 15; i++) {
+        const card = document.createElement('div');
+        card.className = 'floating-card';
+        
+        // Configurações aleatórias de posição, duração e tempo de espera (delay)
+        card.style.left = Math.random() * 100 + 'vw';
+        card.style.animationDuration = (Math.random() * 15 + 10) + 's'; // Entre 10s e 25s
+        card.style.animationDelay = (Math.random() * 10) + 's';
+        
+        const symbol = document.createElement('span');
+        symbol.textContent = suits[Math.floor(Math.random() * suits.length)];
+        symbol.style.position = 'absolute';
+        symbol.style.top = '50%';
+        symbol.style.left = '50%';
+        symbol.style.transform = 'translate(-50%, -50%)';
+        symbol.style.fontSize = '30px';
+        symbol.style.color = 'rgba(255,255,255,0.1)';
+        
+        card.appendChild(symbol);
+        bgContainer.appendChild(card);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Inicia a animação de fundo
+    createAnimatedBackground();
+
     loadProfile();
     populateAvatarGrid();
 
@@ -1074,6 +1217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const eventNotification = document.getElementById('event-notification');
     const closeNotificationBtn = document.getElementById('event-notification-close-btn');
     const multiplayerOptionsModal = document.getElementById('multiplayer-options-modal');
+    const animatedBg = document.getElementById('animated-bg');
     
     const profileNameEl = document.getElementById('profile-name');
     const profileAvatarEl = document.getElementById('profile-avatar');
@@ -1104,6 +1248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameMode = 'vs-bot';
         currentDeckBuilderFor = 'p1';
         gameModeSelectionScreen.classList.add('hidden');
+        animatedBg.classList.add('hidden'); // Esconde o fundo animado ao sair
         deckBuilderScreen.classList.remove('hidden');
         profileContainer.classList.add('hidden');
         state = { p1: { name: userProfile.name }, p2: { name: 'Inimigo' } };
@@ -1112,6 +1257,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('vs-player-btn').onclick = () => {
         gameModeSelectionScreen.classList.add('hidden');
+        animatedBg.classList.add('hidden'); // Esconde o fundo animado ao sair
         multiplayerOptionsModal.classList.remove('hidden');
         profileContainer.classList.add('hidden');
     };
@@ -1128,15 +1274,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('event-btn').onclick = () => {
         gameModeSelectionScreen.classList.add('hidden');
+        animatedBg.classList.add('hidden'); // Esconde o fundo animado ao sair
         eventIntroScreen.classList.remove('hidden');
         profileContainer.classList.add('hidden');
     };
 
+    // NOVO: Adicionado botões da tela de transição Sombria
     document.getElementById('start-event-btn').onclick = () => {
-        alert('Flutuação de Energia:\n\nNo início do turno de cada jogador (a partir do segundo turno de cada um), uma "Moeda Sombria" é jogada.\n\n- Cara: +1 de energia (total 4).\n- Coroa: -1 de energia (total 2).');
         eventIntroScreen.classList.add('hidden');
         eventState = { isActive: true, stage: 0 };
+        // Exibe a tela de transição para o primeiro desafio ao invés de usar Alert()
+        showEventTransition(0);
+    };
+
+    document.getElementById('event-continue-btn').onclick = () => {
+        document.getElementById('event-transition-screen').classList.add('hidden');
         startEventMatch();
+    };
+
+    document.getElementById('event-exit-btn').onclick = () => {
+        window.location.reload();
     };
 
     document.getElementById('confirm-names-btn').onclick = () => {
@@ -1153,6 +1310,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('end-turn').onclick = endTurn;
     document.getElementById('undo-move').onclick = undoMove;
   
+    // Adiciona o funcionamento das setas de rolar
+    document.getElementById('scroll-left-btn').onclick = () => {
+        document.getElementById('hand').scrollBy({ left: -220, behavior: 'smooth' });
+    };
+    document.getElementById('scroll-right-btn').onclick = () => {
+        document.getElementById('hand').scrollBy({ left: 220, behavior: 'smooth' });
+    };
+
     document.getElementById('start-game-btn').onclick = () => {
         if (gameMode === 'event') {
             const hasCrupie = player1CustomDeck.some(card => card.id === 'crupiesombrio');

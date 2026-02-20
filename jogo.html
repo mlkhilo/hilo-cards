@@ -11,6 +11,10 @@
 </head>
 <body>
 
+  <div id="animated-bg"></div>
+
+  <div id="dark-harvest-flash" class="hidden"></div>
+
   <div id="profile-container" class="hidden">
       <span id="profile-name">Jogador</span>
       <img id="profile-avatar" src="incmago.png" alt="Avatar do Jogador">
@@ -28,23 +32,35 @@
       <div class="mode-buttons">
           <button id="vs-bot-btn">Jogador vs. Bot</button>
           <button id="vs-player-btn">Jogador vs. Jogador</button>
-          <button id="event-btn">Evento</button>
+          <button id="event-btn">Evento Sombrio</button>
       </div>
   </div>
 
   <div id="event-intro-screen" class="hidden">
     <div class="event-title-container">
-        <h1>Evento Aposta Sombria</h1>
+        <h1>Aposta Sombria</h1>
         <img src="sombrio.png" alt="Ícone Sombrio" class="event-icon">
     </div>
-    <p>Enfrente três desafios crescentes para desbloquear um poder oculto.</p>
+    <p>Enfrente três desafios macabros para desbloquear o poder proibido. Apenas os fortes sobrevivem à escuridão.</p>
     <div class="event-challenges">
-        <div class="challenge-box">Flutuação de Energia</div>
-        <div class="challenge-box">Pacto de Sangue</div>
-        <div class="challenge-box">A Colheita Sombria</div>
+        <div class="challenge-box">I. Flutuação de Energia</div>
+        <div class="challenge-box">II. Pacto de Sangue</div>
+        <div class="challenge-box">III. A Colheita Sombria</div>
     </div>
-    <p>Você deve incluir a carta <strong>Crupie Sombrio</strong> em seu baralho para participar.</p>
-    <button id="start-event-btn">Iniciar Desafio</button>
+    <p class="warning-text">Você <strong>deve</strong> incluir a carta <span class="highlight-red">Crupiê Sombrio</span> no baralho para participar.</p>
+    <button id="start-event-btn" class="blood-btn">Iniciar Ritual</button>
+  </div>
+
+  <div id="event-transition-screen" class="hidden">
+      <div class="event-transition-content">
+          <h1 id="event-transition-title">Avançando nas Sombras...</h1>
+          <h2 id="event-next-stage-title">Próximo Desafio</h2>
+          <p id="event-next-stage-desc">Descrição do desafio</p>
+          <div class="event-transition-buttons">
+              <button id="event-continue-btn" class="blood-btn">Continuar</button>
+              <button id="event-exit-btn" class="death-btn">Fugir (Sair)</button>
+          </div>
+      </div>
   </div>
   
   <div id="multiplayer-options-modal" class="hidden">
@@ -200,8 +216,12 @@
       <div class="log-area" id="log-area"></div>
       
       <div class="hand-area-container">
-        <div class="hand-title-area">Sua Mão (<span id="hand-counter">0/8</span>)</div>
-        <div class="hand" id="hand"></div>
+        <div class="hand-title-area">Sua Mão (<span id="hand-counter">0/12</span>)</div>
+        <div class="hand-scroll-wrapper">
+            <button id="scroll-left-btn" class="hand-scroll-btn hidden">❮</button>
+            <div class="hand" id="hand"></div>
+            <button id="scroll-right-btn" class="hand-scroll-btn hidden">❯</button>
+        </div>
       </div>
     </div>
   </div>
@@ -249,8 +269,11 @@
   <div id="coin-flip-modal" class="hidden">
     <div class="coin-flip-content">
         <h2 id="coin-flip-title">A Moeda Sombria é jogada...</h2>
-        <div id="coin-spinner">
-            <img src="moedacara.png" alt="Moeda girando">
+        <div id="coin-container">
+            <div id="coin-flipper">
+                <div class="coin-face coin-front"><img src="moedacara.png" alt="Cara"></div>
+                <div class="coin-face coin-back"><img src="moedacoroa.png" alt="Coroa"></div>
+            </div>
         </div>
         <div id="coin-result" class="hidden">
             <img id="coin-result-img" src="" alt="Resultado da moeda">
